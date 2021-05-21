@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group 'com.nmmedit'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.nmmedit.protect.Main'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+dependencies {
+
+    implementation project(':apkprotect')
+    
+    implementation 'org.smali:dexlib2:2.4.0'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
