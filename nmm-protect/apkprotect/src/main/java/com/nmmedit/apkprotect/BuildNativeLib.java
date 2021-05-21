@@ -8,6 +8,7 @@ import java.util.Map;
 
 public class BuildNativeLib {
 
+    //编译出native lib，同时返回最后的so文件
     public static List<File> build(@Nonnull String scriptPath, CMakeOptions options) throws IOException {
         final ProcessBuilder builder = new ProcessBuilder("sh", scriptPath)
                 .directory(new File(options.getProjectHome()));

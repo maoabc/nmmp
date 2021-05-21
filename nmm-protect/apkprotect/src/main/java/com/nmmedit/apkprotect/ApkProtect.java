@@ -133,25 +133,13 @@ public class ApkProtect {
                 zipCopy(zipInput, apkFolders.getZipExtractTempDir(), zipOutput);
 
                 //add AndroidManifest.xml
-                zipOutput.putNextEntry(new ZipEntry(ANDROID_MANIFEST_XML));
-                try (
-                        FileInputStream input = new FileInputStream(newManifestFile);
-                ) {
-                    copyStream(input, zipOutput);
-                }
-                zipOutput.closeEntry();
+                addFileToZip(zipOutput, newManifestFile, new ZipEntry(ANDROID_MANIFEST_XML));
 
                 //add classesX.dex
                 for (File file : outDexFiles) {
                     final ZipEntry zipEntry = new ZipEntry(file.getName());
 
-                    zipOutput.putNextEntry(zipEntry);
-                    try (
-                            FileInputStream input = new FileInputStream(file);
-                    ) {
-                        copyStream(input, zipOutput);
-                    }
-                    zipOutput.closeEntry();
+                    addFileToZip(zipOutput, file, zipEntry);
                 }
 
                 //add native libs
@@ -160,13 +148,7 @@ public class ApkProtect {
                     for (File file : entry.getValue()) {
                         final ZipEntry zipEntry = new ZipEntry("lib/" + abi + "/" + file.getName());
 
-                        zipOutput.putNextEntry(zipEntry);
-                        try (
-                                FileInputStream input = new FileInputStream(file);
-                        ) {
-                            copyStream(input, zipOutput);
-                        }
-                        zipOutput.closeEntry();
+                        addFileToZip(zipOutput, file, zipEntry);
                     }
 
                 }
@@ -183,8 +165,33 @@ public class ApkProtect {
 
     }
 
+    private void addFileToZip(ZipOutputStream zipOutput, File file, ZipEntry zipEntry) throws IOException {
+        zipOutput.putNextEntry(zipEntry);
+        try (
+                FileInputStream input = new FileInputStream(file);
+        ) {
+            copyStream(input, zipOutput);
+        }
+        zipOutput.closeEntry();
+    }
+
     private static Map<String, List<File>> generateNativeLibs(ApkFolders apkFolders) throws IOException {
-//        System.getenv("")
+        String cmakePath = System.getenv("CMAKE_PATH");
+        if (isEmpty(cmakePath)) {
+            System.err.println("No CMAKE_PATH");
+            cmakePath = "";
+        }
+        String sdkHome = System.getenv("ANDROID_SDK_HOME");
+        if (isEmpty(sdkHome)) {
+            sdkHome = "/opt/android-sdk";
+            System.err.println("No ANDROID_SDK_HOME. Default is " + sdkHome);
+        }
+        String ndkHome = System.getenv("ANDROID_NDK_HOME");
+        if (isEmpty(ndkHome)) {
+            ndkHome = "/opt/android-sdk/ndk/22.1.7171670";
+            System.err.println("No ANDROID_NDK_HOME. Default is " + ndkHome);
+        }
+
         final File outRootDir = apkFolders.getOutRootDir();
         final File apkFile = apkFolders.getInApk();
         final File script = File.createTempFile("build", ".sh", outRootDir);
@@ -198,9 +205,9 @@ public class ApkProtect {
         try {
             final List<String> abis = getAbis(apkFile);
             for (String abi : abis) {
-                final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions("",
-                        "/opt/android-sdk",
-                        "/opt/android-sdk/ndk/22.1.7171670", 21,
+                final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
+                        sdkHome,
+                        ndkHome, 21,
                         outRootDir.getAbsolutePath(), BuildNativeLib.CMakeOptions.BuildType.RELEASE, abi);
                 final List<File> files = BuildNativeLib.build(script.getPath(), cmakeOptions);
                 allLibs.put(abi, files);
@@ -211,6 +218,10 @@ public class ApkProtect {
         }
         return allLibs;
 
+    }
+
+    private static boolean isEmpty(String cmakePath) {
+        return cmakePath == null || "".equals(cmakePath);
     }
 
     //根据apk里文件得到abi，如果没有本地库则返回所有
