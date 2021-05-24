@@ -7,7 +7,7 @@
 
 当前只支持linux环境，先安装好JDK及android sdk和ndk。
 
-下载[nmm-protect.jar]("https://github.com/maoabc/nmmp/releases/download/1.0/nmm-protect-1.0-SNAPSHOT.jar"),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
+下载[nmm-protect.jar](https://github.com/maoabc/nmmp/releases/download/1.0/nmm-protect-1.0-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
@@ -17,7 +17,7 @@ export CMAKE_PATH=/opt/android-sdk/cmake/3.18.1/bin   #可选不配置的话直�
 ``` bash
 java -jar nmm-protect-xxx.jar input.apk
 ```
-执行完毕会在input.apk目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等
+执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等
 
 生成的apk需要使用zipalign对齐及apksigner签名才能安装使用
 ``` bash
