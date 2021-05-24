@@ -186,8 +186,6 @@ public class JniCodeGenerator {
 
             }
             triesBuilder.append("\n    };\n");
-
-
         }
         writer.write(triesBuilder.toString());
 

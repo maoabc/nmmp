@@ -24,7 +24,8 @@ import java.util.*;
  * System.loadLibrary(libname);
  * }
  * }
- * 如果原来自定义了Application,则该类成为原来Application的父类,原来Application的父类成为该类的父类;
+ * 如果原来自定义了Application,则该类成为原来Application的父类,原来Application的父类成为该类的父类：
+ * BaseApp <-- android.app.Application 变为 BaseApp <-- MyApplication <-- android.app.Application
  * 如果原来没自定义Application,则需要修改AndroidManifest.xml把该类设置为当前应用的Application
  */
 public class LoadLibClassDef extends BaseTypeReference implements ClassDef {

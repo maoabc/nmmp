@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 收集方法代码,把它们放入全新的dex中,改变class及其他各种索引让人难以恢复原本代码
+ * 收集方法代码,把它们放入全新的dex中,改变class及其他各种索引让人难以简单恢复原本代码，
+ * 就算逆向出指令流也需要重新合并多个dex
  */
 public class ClassToSymDex extends BaseTypeReference implements ClassDef {
     private final ClassDef classDef;

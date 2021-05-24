@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("No Input apk.");
-            System.err.println("<inApk> [mapping file]");
+            System.err.println("<inApk> ");
             System.exit(-1);
         }
         final File apk = new File(args[0]);
