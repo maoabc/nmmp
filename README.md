@@ -11,7 +11,7 @@
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
-export CMAKE_PATH=/opt/android-sdk/cmake/3.18.1/bin   #可选不配置的话直接使用/bin/cmake
+export CMAKE_PATH=/opt/android-sdk/cmake/3.18.1/   #可选，不配置的话直接使用/bin/cmake
 ```
 然后运行jar：
 ``` bash
