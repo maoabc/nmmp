@@ -236,8 +236,11 @@ public class ApkProtect {
                 abis.add(matcher.group(1));
             }
         }
+        //不支持armeabi，可能还要删除mips相关
+        abis.remove("armeabi");
         if (abis.isEmpty()) {
-            return Arrays.asList("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+            //默认只生成armeabi-v7a
+            return Arrays.asList("armeabi-v7a"/*, "arm64-v8a", "x86", "x86_64"*/);
         }
         return new ArrayList<>(abis);
     }

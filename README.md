@@ -5,6 +5,8 @@
 
 + 简单使用
 
+不编译nmm-protect，可以直接看使用它生成项目及最后的apk，[对es文件管理器加固的示例](https://github.com/maoabc/nmmp/releases/download/%E5%AF%B9es%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86%E5%8A%A0%E5%9B%BA%E7%A4%BA%E4%BE%8B/es-build.zip)。
+
 当前只支持linux环境，先安装好JDK及android sdk和ndk。
 
 下载[nmm-protect.jar](https://github.com/maoabc/nmmp/releases/download/1.0/nmm-protect-1.0-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
