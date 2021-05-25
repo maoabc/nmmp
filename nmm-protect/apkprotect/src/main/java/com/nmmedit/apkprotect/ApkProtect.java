@@ -20,7 +20,6 @@ import org.jf.dexlib2.writer.pool.DexPool;
 import javax.annotation.Nonnull;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -508,12 +507,14 @@ public class ApkProtect {
 
         final File newFile = new File(mainDex.getParent(), ".temp.dex");
         newDex.writeTo(new FileDataStore(newFile));
-        if (mainDex.delete()) {
-            if (!newFile.renameTo(mainDex)) {
-                throw new RemoteException("Can't handle main dex");
-            }
-        } else {
-            throw new RemoteException("Can't handle main dex");
+
+        mainDex.delete();
+        if (!newFile.renameTo(mainDex)) {
+            throw new RuntimeException("Can't handle main dex " + mainDex);
+        }
+
+        if (!mainDex.exists()) {
+            throw new RuntimeException("No main dex: " + mainDex);
         }
 
 
