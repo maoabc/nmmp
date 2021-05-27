@@ -2,6 +2,7 @@ package com.nmmedit.apkprotect.dex2c.converter;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Sets;
+import com.nmmedit.apkprotect.util.ModifiedUtf8;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.dexbacked.reference.DexBackedFieldReference;
 import org.jf.dexlib2.dexbacked.reference.DexBackedMethodReference;
@@ -17,6 +18,7 @@ import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.util.MethodUtil;
 
 import java.io.IOException;
+import java.io.UTFDataFormatException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -81,7 +83,14 @@ public class ResolverCodeGenerator {
             String type = typePool.get(i);
             typePoolIndexMap.put(type, i);
 
-            maxTypeLen = Math.max(maxTypeLen, type.getBytes(StandardCharsets.UTF_8).length);
+            //计算modified utf8 长度
+            int countBytes;
+            try {
+                countBytes = (int) ModifiedUtf8.countBytes(type, true);
+            } catch (UTFDataFormatException e) {
+                countBytes = type.getBytes(StandardCharsets.UTF_8).length;
+            }
+            maxTypeLen = Math.max(maxTypeLen, countBytes);
         }
         this.maxTypeLen = maxTypeLen;
 
@@ -461,10 +470,11 @@ public class ResolverCodeGenerator {
         ArrayList<Long> strOffsets = new ArrayList<>();
         long strOffset = 0;
         for (String string : stringPool) {
-            byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+
+            //必须使用modified utf8，不然jni的NewStringUtf函数可能出问题.issue #3
+            byte[] bytes = ModifiedUtf8.encode(string);
 
             writer.write("    ");
-            ;
             for (byte aByte : bytes) {
                 writer.write(String.format("0x%02x,", aByte & 0xFF));
             }
@@ -499,8 +509,8 @@ public class ResolverCodeGenerator {
         writer.flush();
     }
 
-    static String stringEsc(String str) {
-        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
+    static String stringEsc(String str) throws UTFDataFormatException {
+        byte[] bytes = ModifiedUtf8.encode(str);
         StringBuilder sb = new StringBuilder(4 * bytes.length);
         for (byte b : bytes) {
             sb.append(String.format("\\x%02x", b & 0xFF));
