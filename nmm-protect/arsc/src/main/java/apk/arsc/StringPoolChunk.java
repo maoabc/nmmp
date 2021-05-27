@@ -16,27 +16,17 @@
 
 package apk.arsc;
 
+import apk.base.Preconditions;
+import apk.io.LittleEndianDataOutputStream;
 import com.google.auto.value.AutoValue;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-
-import javax.annotation.Nullable;
-
-import apk.base.Preconditions;
-import apk.io.LittleEndianDataOutputStream;
+import java.util.*;
 
 /** Represents a string pool structure. */
 public class StringPoolChunk extends Chunk {

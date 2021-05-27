@@ -61,7 +61,10 @@ public class ApkProtect {
                 //错误apk文件
                 throw new RuntimeException("Not is apk");
             }
-            final String applicationClass = AxmlEdit.getApplicationName(manifestBytes);
+            String applicationClass = AxmlEdit.getApplicationName(manifestBytes);
+            if (applicationClass.equals("")) {
+                applicationClass = ANDROID_APP_APPLICATION;
+            }
             final String packageName = AxmlEdit.getPackageName(manifestBytes);
 
 
@@ -85,7 +88,7 @@ public class ApkProtect {
             //todo 可能需要通过外部配置来保留主dex需要的class
 
             //application class 继承关系
-            final List<String> appClassTypes = getMainDexClasses(globalConfig, applicationClass);
+            final List<String> appClassTypes = getApplicationClassesFromMainDex(globalConfig, applicationClass);
 
             mainDexClassTypeSet.addAll(appClassTypes);
 
@@ -351,7 +354,7 @@ public class ApkProtect {
     }
 
     @Nonnull
-    private static List<String> getMainDexClasses(GlobalDexConfig globalConfig, String applicationClass) throws IOException {
+    private static List<String> getApplicationClassesFromMainDex(GlobalDexConfig globalConfig, String applicationClass) throws IOException {
         final List<String> mainDexClassList = new ArrayList<>();
         String tmpType = classDotNameToType(applicationClass);
         mainDexClassList.add(tmpType);

@@ -16,20 +16,14 @@
 
 package apk.arsc;
 
+import apk.base.Preconditions;
+
+import javax.annotation.Nullable;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
-
-import apk.base.Preconditions;
 
 /** Represents the beginning of an XML node. */
 public final class XmlStartElementChunk extends XmlNodeChunk {
@@ -132,6 +126,14 @@ public final class XmlStartElementChunk extends XmlNodeChunk {
 
   public void setAttribute(int index, XmlAttribute attribute) {
     attributes.set(index, attribute);
+  }
+
+  public void addAttribute(XmlAttribute attribute) {
+    attributes.add(attribute);
+  }
+
+  public void addAttribute(int i, XmlAttribute attribute) {
+    attributes.add(i, attribute);
   }
 
   /** Returns the namespace URI, or the empty string if not present. */
