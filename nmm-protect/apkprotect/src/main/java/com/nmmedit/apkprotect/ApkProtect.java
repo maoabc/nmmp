@@ -361,7 +361,7 @@ public class ApkProtect {
         for (DexConfig config : globalConfig.getConfigs()) {
             DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(
                     Opcodes.getDefault(),
-                    new BufferedInputStream(new FileInputStream(config.getNativeDexFile())));
+                    new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
             final Set<? extends DexBackedClassDef> classes = dexFile.getClasses();
             ClassDef classDef;
             while (true) {
@@ -419,7 +419,7 @@ public class ApkProtect {
 
             DexBackedDexFile dexNativeFile = DexBackedDexFile.fromInputStream(
                     Opcodes.getDefault(),
-                    new BufferedInputStream(new FileInputStream(config.getNativeDexFile())));
+                    new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
 
             for (ClassDef classDef : dexNativeFile.getClasses()) {
                 if (mainClassSet.contains(classDef.getType())) {

@@ -189,13 +189,13 @@ public class Dex2c {
 
 
         //写入需要运行的dex
-        nativeMethodDexPool.writeTo(new FileDataStore(config.getNativeDexFile()));
+        nativeMethodDexPool.writeTo(new FileDataStore(config.getShellDexFile()));
         //写入符号dex
-        symDexPool.writeTo(new FileDataStore(config.getSymbolDexFile()));
+        symDexPool.writeTo(new FileDataStore(config.getImplDexFile()));
 
 
         final DexBackedDexFile symDexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
-                new BufferedInputStream(new FileInputStream(config.getSymbolDexFile())));
+                new BufferedInputStream(new FileInputStream(config.getImplDexFile())));
 
         //根据符号dex生成c代码
         try (FileWriter nativeCodeWriter = new FileWriter(config.getNativeFunctionsFile());
@@ -244,7 +244,7 @@ public class Dex2c {
 
         DexBackedDexFile dexNativeFile = DexBackedDexFile.fromInputStream(
                 Opcodes.getDefault(),
-                new BufferedInputStream(new FileInputStream(config.getNativeDexFile())));
+                new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
 
         List<DexPool> dexPools = new ArrayList<>();
         dexPools.add(lastDexPool);
@@ -265,7 +265,7 @@ public class Dex2c {
     }
 
     public static void internClass(DexConfig config, DexPool dexPool, ClassDef classDef) {
-        final Set<String> classes = config.getNativeClasses();
+        final Set<String> classes = config.getHandledNativeClasses();
         final String type = classDef.getType();
         final String className = type.substring(1, type.length() - 1);
         if (classes.contains(className)) {

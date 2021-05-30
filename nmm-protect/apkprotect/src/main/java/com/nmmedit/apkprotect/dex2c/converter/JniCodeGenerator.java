@@ -26,7 +26,9 @@ public class JniCodeGenerator {
 
 
     private final boolean isRegisterNative;
-    private final HashMultimap<String, MyMethod> nativeMethods = HashMultimap.create();
+
+    private final HashMultimap<String, MyMethod> handledNativeMethods = HashMultimap.create();
+
     private final Map<String, Integer> nativeMethodOffsets = new HashMap<>();
     private final ResolverCodeGenerator resolverCodeGenerator;
     private final InstructionRewriter instructionRewriter;
@@ -62,7 +64,7 @@ public class JniCodeGenerator {
 
         String clazzName = classType.substring(1, classType.length() - 1);
 
-        nativeMethods.put(clazzName, new MyMethod(clazzName, methodName, parameterTypes, returnType));
+        handledNativeMethods.put(clazzName, new MyMethod(clazzName, methodName, parameterTypes, returnType));
 
         writer.write(String.format("%s %s %s(JNIEnv *env, %s ",
                 isRegisterNative ? "static" : "JNIEXPORT",
@@ -223,8 +225,8 @@ public class JniCodeGenerator {
     }
 
 
-    public Set<String> getNativeClasses() {
-        return nativeMethods.keySet();
+    public Set<String> getHandledNativeClasses() {
+        return handledNativeMethods.keySet();
     }
 
     //必须在产生代码后调用才有效果
@@ -319,10 +321,10 @@ public class JniCodeGenerator {
 
         int methodIdx = 0;
         writer.write("static const MyNativeMethod gNativeMethods[] = {\n");
-        for (String clazz : nativeMethods.keySet()) {
+        for (String clazz : handledNativeMethods.keySet()) {
 
             int startIdx = methodIdx;
-            Set<MyMethod> methods = nativeMethods.get(clazz);
+            Set<MyMethod> methods = handledNativeMethods.get(clazz);
             for (MyMethod method : methods) {
                 int nameIdx = resolverCodeGenerator.getIndexByString(method.name);
                 int sigIdx = resolverCodeGenerator.getIndexByString(MyMethodUtil.getMethodSignature(method.parameterTypes, method.returnType));
