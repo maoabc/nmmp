@@ -101,11 +101,10 @@ public class JniCodeGenerator {
         } else {
             //一次同时分配寄存器及它的状态所需内存
             regsAssign = new StringBuilder(String.format(
-                    "    const u2 flags_count = %d / sizeof(regptr_t) + ((%d %% sizeof(regptr_t)) ? 1 : 0);\n" +
-                            "    regptr_t *regs = (regptr_t *) calloc(%d, sizeof(regptr_t) + flags_count);\n",
-                    registerCount, registerCount, registerCount));
+                    "    regptr_t *regs = (regptr_t *) calloc(%d, sizeof(regptr_t) + sizeof(u1));\n",
+                    registerCount));
 
-            //寄存器后面部分是寄存器状态数组,一个状态一个字节
+            //寄存器后面部分是寄存器状态数组,和寄存器数量一一对应
             regFlagsAssign = new StringBuilder(
                     String.format("    u1 *reg_flags = ((u1 *) regs) + (%d * sizeof(regptr_t));\n", registerCount));
         }
