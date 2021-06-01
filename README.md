@@ -1,15 +1,15 @@
 # nmmp
 基于dex-vm运行dalvik字节码从而对dex进行保护，增加反编译难度。
-项目分为两部分nmm-protect是纯java项目，对dex进行转换，把dex里方法及各种数据转为c结构体，处理apk生成c项目，编译生成so，输出处理后的apk。nmmvm是一个安卓项目，包含dex-vm实现及各种dalvik指令的测试等。
+项目分为两部分nmm-protect是纯java项目，对dex进行转换，把dex里方法及各种数据转为c结构体，处理apk生成ndk项目然后编译生成so，输出处理后的apk。nmmvm是一个安卓项目，包含dex-vm实现及各种dalvik指令的测试等。
 # nmm-protect
 
 + 简单使用
 
-不编译nmm-protect，可以直接看使用它生成项目及最后的apk，[对es文件管理器加固的示例](https://github.com/maoabc/nmmp/releases/download/%E5%AF%B9es%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86%E5%8A%A0%E5%9B%BA%E7%A4%BA%E4%BE%8B/es-build.zip)。
+不编译nmm-protect，可以直接看使用它生成项目及最后的apk，[一个对apk处理的例子](https://github.com/maoabc/nmmp/releases/download/demo/demo.zip)。
 
 当前只支持linux环境，先安装好JDK及android sdk和ndk。
 
-下载[nmm-protect.jar](https://github.com/maoabc/nmmp/releases/download/1.0/nmm-protect-1.0-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
+下载[nmm-protect.jar](https://github.com/maoabc/nmmp/releases/download/1.1/nmm-protect-1.1-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
