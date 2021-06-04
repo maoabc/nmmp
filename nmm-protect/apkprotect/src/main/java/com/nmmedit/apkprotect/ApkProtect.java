@@ -196,27 +196,21 @@ public class ApkProtect {
 
         final File outRootDir = apkFolders.getOutRootDir();
         final File apkFile = apkFolders.getInApk();
-        final File script = File.createTempFile("build", ".sh", outRootDir);
-        try (
-                final InputStream in = ApkProtect.class.getResourceAsStream("/build.sh");
-                final FileOutputStream out = new FileOutputStream(script);
-        ) {
-            copyStream(in, out);
-        }
-        final Map<String, List<File>> allLibs = new HashMap<>();
-        try {
-            final List<String> abis = getAbis(apkFile);
-            for (String abi : abis) {
-                final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
-                        sdkHome,
-                        ndkHome, 21,
-                        outRootDir.getAbsolutePath(), BuildNativeLib.CMakeOptions.BuildType.RELEASE, abi);
-                final List<File> files = BuildNativeLib.build(script.getPath(), cmakeOptions);
-                allLibs.put(abi, files);
-            }
 
-        } finally {
-            script.delete();
+        final Map<String, List<File>> allLibs = new HashMap<>();
+
+        final List<String> abis = getAbis(apkFile);
+        for (String abi : abis) {
+            final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
+                    sdkHome,
+                    ndkHome, 21,
+                    outRootDir.getAbsolutePath(), BuildNativeLib.CMakeOptions.BuildType.RELEASE, abi);
+
+            //删除上次创建的目录
+            deleteFile(new File(cmakeOptions.getBuildPath()));
+
+            final List<File> files = BuildNativeLib.build(cmakeOptions);
+            allLibs.put(abi, files);
         }
         return allLibs;
 
