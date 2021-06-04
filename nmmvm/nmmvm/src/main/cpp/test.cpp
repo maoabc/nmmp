@@ -840,6 +840,37 @@ JNIEXPORT void Java_com_nmmedit_vm_VmUnitTest_passClass0
 
 }
 
+JNIEXPORT jobject Java_com_nmmedit_vm_FieldTest_getObj0
+        (JNIEnv *env, jclass jcls) {
+    jclass fieldTestCls = env->FindClass("com/nmmedit/vm/FieldTest$B");
+    jfieldID fieldId = env->GetStaticFieldID(fieldTestCls, "obj", "Ljava/lang/Object;");
+
+    jobject objectField = env->GetStaticObjectField(fieldTestCls, fieldId);
+
+    ALOGD("obj=%p",objectField);
+
+    return objectField;
+}
+
+JNIEXPORT jint Java_com_nmmedit_vm_FieldTest_getInt0
+        (JNIEnv *env, jclass jcls) {
+    jclass clsA = env->FindClass("com/nmmedit/vm/FieldTest$A");
+    jclass fieldTestCls = env->FindClass("com/nmmedit/vm/FieldTest$B");
+    jfieldID fieldId = env->GetStaticFieldID(fieldTestCls, "INT", "I");
+
+    jint objectField = env->GetStaticIntField(fieldTestCls, fieldId);
+
+    jfieldID fieldIdA = env->GetStaticFieldID(clsA, "INT", "I");
+
+    jint objectField2 = env->GetStaticIntField(clsA, fieldIdA);
+
+    ALOGD("int=%d",objectField);
+
+    return objectField;
+}
+
+
+
 
 #ifdef __cplusplus
 }

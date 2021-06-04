@@ -249,4 +249,18 @@ public class VmUnitTest {
     }
 
     public native static void passClass0(Class<?> clazz);
+
+
+
+
+    @Test
+    public void testStaticField() {
+        System.loadLibrary("nmmp");
+        final int i = FieldTest.getInt();
+        final int i0 = FieldTest.getInt0();
+        assert i0 != i;
+        final Object obj0 = FieldTest.getObj0();
+        final Object obj = FieldTest.getObj();
+        assert obj != obj0;
+    }
 }
