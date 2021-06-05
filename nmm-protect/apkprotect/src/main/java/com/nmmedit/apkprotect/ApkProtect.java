@@ -204,7 +204,9 @@ public class ApkProtect {
             final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
                     sdkHome,
                     ndkHome, 21,
-                    outRootDir.getAbsolutePath(), BuildNativeLib.CMakeOptions.BuildType.RELEASE, abi);
+                    outRootDir.getAbsolutePath(),
+                    BuildNativeLib.CMakeOptions.BuildType.RELEASE,
+                    abi);
 
             //删除上次创建的目录
             deleteFile(new File(cmakeOptions.getBuildPath()));

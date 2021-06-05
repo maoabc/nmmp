@@ -35,13 +35,17 @@ public class JniCodeGenerator {
     private final DexBackedDexFile dexFile;
 
     public JniCodeGenerator(@Nonnull DexBackedDexFile dexFile,
+                            @Nonnull ClassAnalyzer analyzer,
                             @Nonnull InstructionRewriter instructionRewriter) {
         this.dexFile = dexFile;
-        this.instructionRewriter = instructionRewriter;
-        instructionRewriter.loadDexFile(dexFile);
 
 //      根据dex里字符串常量,类型常量等生成符号解析代码,给vm提供符号信息
-        resolverCodeGenerator = new ResolverCodeGenerator(dexFile);
+        resolverCodeGenerator = new ResolverCodeGenerator(dexFile, analyzer);
+
+        this.instructionRewriter = instructionRewriter;
+
+        instructionRewriter.loadReferences(resolverCodeGenerator.getReferences(), analyzer);
+
         this.isRegisterNative = true;
     }
 
@@ -320,13 +324,14 @@ public class JniCodeGenerator {
 
         int methodIdx = 0;
         writer.write("static const MyNativeMethod gNativeMethods[] = {\n");
+        final References references = resolverCodeGenerator.getReferences();
         for (String clazz : handledNativeMethods.keySet()) {
 
             int startIdx = methodIdx;
             Set<MyMethod> methods = handledNativeMethods.get(clazz);
             for (MyMethod method : methods) {
-                int nameIdx = resolverCodeGenerator.getIndexByString(method.name);
-                int sigIdx = resolverCodeGenerator.getIndexByString(MyMethodUtil.getMethodSignature(method.parameterTypes, method.returnType));
+                int nameIdx = references.getStringItemIndex(method.name);
+                int sigIdx = references.getStringItemIndex(MyMethodUtil.getMethodSignature(method.parameterTypes, method.returnType));
                 writer.write(String.format(
                         "    {%d, %d, (void *) %s},\n",
                         nameIdx, sigIdx,
@@ -354,7 +359,7 @@ public class JniCodeGenerator {
         for (Map.Entry<String, Ranger> entry : methodRanger.entrySet()) {
             Ranger ranger = entry.getValue();
             final String className = entry.getKey();
-            int classIdx = resolverCodeGenerator.getIndexByClassName(className);
+            int classIdx = references.getClassNameItemIndex(className);
             writer.write(String.format("    {.classIdx = %d, .offset = %d, .count = %d},\n", classIdx, ranger.start, ranger.count));
             nativeMethodOffsets.put(className, dataOff++);
         }

@@ -1,6 +1,7 @@
 package com.nmmedit.apkprotect.dex2c;
 
 import com.google.common.collect.Maps;
+import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
 import com.nmmedit.apkprotect.dex2c.converter.MyMethodUtil;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
@@ -164,44 +165,48 @@ public class Dex2c {
                                       ClassAndMethodFilter filter,
                                       InstructionRewriter instructionRewriter,
                                       File outDir) throws IOException {
-        DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(
+        DexBackedDexFile originDexFile = DexBackedDexFile.fromInputStream(
                 Opcodes.getDefault(),
                 dex);
 
         //把方法变为本地方法,用它替换掉原本的dex
-        DexPool nativeMethodDexPool = new DexPool(Opcodes.getDefault());
+        DexPool shellDexPool = new DexPool(Opcodes.getDefault());
 
-        DexPool symDexPool = new DexPool(Opcodes.getDefault());
+        DexPool nativeImplDexPool = new DexPool(Opcodes.getDefault());
 
 
-        for (final ClassDef classDef : dexFile.getClasses()) {
+        for (final ClassDef classDef : originDexFile.getClasses()) {
             if (filter.acceptClass(classDef)) {
                 //把需要转换的方法设为native
-                nativeMethodDexPool.internClass(new ClassMethodToNative(classDef, filter));
+                shellDexPool.internClass(new ClassMethodToNative(classDef, filter));
                 //收集所有需要转换的方法生成新dex
-                symDexPool.internClass(new ClassToSymDex(classDef, filter));
+                nativeImplDexPool.internClass(new ClassToSymDex(classDef, filter));
             } else {
                 //不需要处理的class,直接复制
-                nativeMethodDexPool.internClass(classDef);
+                shellDexPool.internClass(classDef);
             }
         }
         DexConfig config = new DexConfig(outDir, dexFileName);
 
 
         //写入需要运行的dex
-        nativeMethodDexPool.writeTo(new FileDataStore(config.getShellDexFile()));
+        shellDexPool.writeTo(new FileDataStore(config.getShellDexFile()));
         //写入符号dex
-        symDexPool.writeTo(new FileDataStore(config.getImplDexFile()));
+        nativeImplDexPool.writeTo(new FileDataStore(config.getImplDexFile()));
 
 
-        final DexBackedDexFile symDexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
+        final DexBackedDexFile nativeImplDexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
                 new BufferedInputStream(new FileInputStream(config.getImplDexFile())));
 
         //根据符号dex生成c代码
         try (FileWriter nativeCodeWriter = new FileWriter(config.getNativeFunctionsFile());
              FileWriter resolverWriter = new FileWriter(config.getResolverFile());
         ) {
-            JniCodeGenerator codeGenerator = new JniCodeGenerator(symDexFile, instructionRewriter);
+            final ClassAnalyzer classAnalyzer = new ClassAnalyzer(originDexFile);
+            JniCodeGenerator codeGenerator = new JniCodeGenerator(nativeImplDexFile,
+                    classAnalyzer,
+                    instructionRewriter);
+
             codeGenerator.generate(
                     config,
                     resolverWriter,

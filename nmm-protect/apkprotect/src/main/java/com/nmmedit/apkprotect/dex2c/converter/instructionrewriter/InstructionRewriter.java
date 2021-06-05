@@ -3,10 +3,11 @@ package com.nmmedit.apkprotect.dex2c.converter.instructionrewriter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
+import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
+import com.nmmedit.apkprotect.dex2c.converter.References;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.ReferenceType;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.MethodImplementation;
 import org.jf.dexlib2.iface.TryBlock;
@@ -34,32 +35,20 @@ public abstract class InstructionRewriter {
 
 
     final Opcodes opcodes;
-    private MyPool<String> stringSection;
-    private MyPool<String> typeSection;
-    private MyPool<FieldReference> fieldSection;
-    private MyPool<MethodProtoReference> protoSection;
-    private MyPool<MethodReference> methodSection;
-    private MyPool<MethodHandleReference> methodHandleSection;
-    private MyPool<CallSiteReference> callSiteSection;
+    // 指令重写需要的引用信息
+    private References references;
+    private ClassAnalyzer classAnalyzer;
 
-    public InstructionRewriter(Opcodes opcodes) {
+
+    public InstructionRewriter(@Nonnull Opcodes opcodes) {
         this.opcodes = opcodes;
     }
 
-    /**
-     * 指令重写前需要加载dexfile里的符号
-     *
-     * @param dexFile
-     */
-    public final void loadDexFile(DexBackedDexFile dexFile) {
-
-        stringSection = new MyPool<>(dexFile.getStringSection());
-        typeSection = new MyPool<>(dexFile.getTypeSection());
-        fieldSection = new MyPool<>(dexFile.getFieldSection());
-        protoSection = new MyPool<>(dexFile.getProtoSection());
-        methodSection = new MyPool<>(dexFile.getMethodSection());
-        methodHandleSection = new MyPool<>(dexFile.getMethodHandleSection());
-        callSiteSection = new MyPool<>(dexFile.getCallSiteSection());
+    public void loadReferences(
+            @Nonnull References references,
+            @Nonnull ClassAnalyzer classAnalyzer) {
+        this.references = references;
+        this.classAnalyzer = classAnalyzer;
     }
 
     /**
@@ -294,7 +283,7 @@ public abstract class InstructionRewriter {
 
                         if (exceptionTypeReference != null) {
                             //regular exception handling
-                            DexDataWriter.writeUleb128(ehBuf, typeSection.getItemIndex(exceptionTypeReference.getType()));
+                            DexDataWriter.writeUleb128(ehBuf, references.getTypeItemIndex(exceptionTypeReference.getType()));
                             DexDataWriter.writeUleb128(ehBuf, codeAddress);
                         } else {
                             //catch-all
@@ -716,7 +705,22 @@ public abstract class InstructionRewriter {
         return (b << 4) | a;
     }
 
+
     private int getReferenceIndex(ReferenceInstruction referenceInstruction) {
+        switch (referenceInstruction.getOpcode()) {
+            case SGET:
+            case SGET_BOOLEAN:
+            case SGET_BYTE:
+            case SGET_CHAR:
+            case SGET_SHORT:
+            case SGET_WIDE:
+            case SGET_OBJECT:
+                final FieldReference reference = (FieldReference) referenceInstruction.getReference();
+                final FieldReference newFieldRef = classAnalyzer.getDirectFieldRef(reference);
+                if (newFieldRef != null) {
+                    return getReferenceIndex(referenceInstruction.getReferenceType(), newFieldRef);
+                }
+        }
         return getReferenceIndex(referenceInstruction.getReferenceType(),
                 referenceInstruction.getReference());
     }
@@ -724,19 +728,16 @@ public abstract class InstructionRewriter {
     private int getReferenceIndex(int referenceType, Reference reference) {
         switch (referenceType) {
             case ReferenceType.FIELD:
-                return fieldSection.getItemIndex((FieldReference) reference);
+                return references.getFieldItemIndex((FieldReference) reference);
             case ReferenceType.METHOD:
-                return methodSection.getItemIndex((MethodReference) reference);
+                return references.getMethodItemIndex((MethodReference) reference);
             case ReferenceType.STRING:
-                return stringSection.getItemIndex(((StringReference) reference).getString());
+                return references.getStringItemIndex(((StringReference) reference).getString());
             case ReferenceType.TYPE:
-                return typeSection.getItemIndex(((TypeReference) reference).getType());
+                return references.getTypeItemIndex(((TypeReference) reference).getType());
             case ReferenceType.METHOD_PROTO:
-                return protoSection.getItemIndex((MethodProtoReference) reference);
             case ReferenceType.METHOD_HANDLE:
-//                return methodHandleSection.getItemIndex((MethodHandleKey) reference);
             case ReferenceType.CALL_SITE:
-//                return callSiteSection.getItemIndex((CallSiteKey) reference);
             default:
                 throw new ExceptionWithContext("Unknown reference type: %d", referenceType);
         }

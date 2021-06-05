@@ -27,7 +27,7 @@ public class Main {
 
 
         ClassAndMethodFilter filterConfig = new BasicKeepConfig();
-        if (args.length == 2) {
+        if (args.length == 2) {//根据proguard的mapping.txt得到混淆前的类名和方法名，然后判断是否要保留
             final MappingReader mappingReader = new MappingReader(new File(args[1]));
             filterConfig = new ProguardMappingConfig(new BasicKeepConfig(), mappingReader) {
                 @Override
