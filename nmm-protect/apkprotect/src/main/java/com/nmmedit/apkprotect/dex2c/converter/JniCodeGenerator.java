@@ -162,7 +162,7 @@ public class JniCodeGenerator {
 
         writer.append("    static const u2 insns[] = {");
 
-        final byte[] instructionData = instructionRewriter.instructionRewriter(implementation);
+        final byte[] instructionData = instructionRewriter.rewriteInstructions(implementation);
         final int dataLength = instructionData.length;
         //生成字节码数组
         final DexBuffer instructionBuf = new DexBuffer(instructionData);

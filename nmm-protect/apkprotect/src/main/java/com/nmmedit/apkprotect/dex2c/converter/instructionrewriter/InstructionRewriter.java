@@ -84,7 +84,7 @@ public abstract class InstructionRewriter {
         }
     }
 
-    public final byte[] instructionRewriter(MethodImplementation methodImp) {
+    public final byte[] rewriteInstructions(MethodImplementation methodImp) {
         if (methodImp == null) {
             throw new RuntimeException("No methodImp");
         }
@@ -283,7 +283,7 @@ public abstract class InstructionRewriter {
 
                         if (exceptionTypeReference != null) {
                             //regular exception handling
-                            DexDataWriter.writeUleb128(ehBuf, references.getTypeItemIndex(exceptionTypeReference.getType()));
+                            DexDataWriter.writeUleb128(ehBuf, getReferenceIndex(ReferenceType.TYPE, exceptionTypeReference));
                             DexDataWriter.writeUleb128(ehBuf, codeAddress);
                         } else {
                             //catch-all
@@ -715,11 +715,17 @@ public abstract class InstructionRewriter {
             case SGET_SHORT:
             case SGET_WIDE:
             case SGET_OBJECT:
+                //修复接口中静态域访问问题
                 final FieldReference reference = (FieldReference) referenceInstruction.getReference();
                 final FieldReference newFieldRef = classAnalyzer.getDirectFieldRef(reference);
                 if (newFieldRef != null) {
                     return getReferenceIndex(referenceInstruction.getReferenceType(), newFieldRef);
                 }
+                break;
+            case CONST_STRING:
+            case CONST_STRING_JUMBO:
+                //todo 直接从constStringPool中得到索引，这样生成c代码时可以去掉二分法
+                break;
         }
         return getReferenceIndex(referenceInstruction.getReferenceType(),
                 referenceInstruction.getReference());
@@ -743,19 +749,4 @@ public abstract class InstructionRewriter {
         }
     }
 
-
-    private static class MyPool<T> {
-        @Nonnull
-        private final Map<T, Integer> section = Maps.newHashMap();
-
-        public MyPool(List<? extends T> references) {
-            for (int i = 0; i < references.size(); i++) {
-                section.put(references.get(i), i);
-            }
-        }
-
-        public int getItemIndex(T ref) {
-            return section.get(ref);
-        }
-    }
 }
