@@ -113,13 +113,20 @@ public class LoadLibClassDef extends BaseTypeReference implements ClassDef {
     public Iterable<? extends Method> getDirectMethods() {
         if (baseAppClassDef != null) {//原来方法上添加指令
             final ArrayList<Method> methods = new ArrayList<>();
+            boolean hasStaticBlock = false;
             for (Method method : baseAppClassDef.getDirectMethods()) {
                 if (method.getName().equals("<clinit>")) {
                     methods.add(new LoadLibStaticBlockMethod(method, type, libName));
+                    hasStaticBlock = true;
                 } else {
                     methods.add(method);
                 }
             }
+            //自定义application没有静态初始化方法，给它添加静态初始化方法
+            if (!hasStaticBlock) {
+                methods.add(new LoadLibStaticBlockMethod(null, type, libName));
+            }
+
             return methods;
         }
 
