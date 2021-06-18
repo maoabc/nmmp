@@ -1,16 +1,20 @@
 {
+    // Choose under which architecture you need to build C++ libraries
     "abi":{
         "armeabi-v7a":true,
         "arm64-v8a":false,
         "x86":true,
         "x86_64":false
     },
+    // If you do not have environment variables set, enter the path to SDK, NDK and CMAKE
     "path": {
         "sdk": "/Android/Sdk", // E:\Android\Sdk
         "cmake": "/Android/Sdk/cmake/3.10.2.4988404", // E:\Android\Sdk\cmake\3.10.2.4988404
         "ndk": "/Android/Sdk/ndk/22.0.7026061" // E:\Android\Sdk\ndk\22.0.7026061
     },
-    "ndk":{
+    // Indicate under which platform the NDK is installed
+    "ndk": {
+        // For Linux: linux-x86_64
         "toolchains":"windows-x86_64" // E:\Android\Sdk\ndk\22.0.7026061\toolchains\arm-linux-androideabi-4.9\prebuilt\windows-x86_64\bin
     }
 }
