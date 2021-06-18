@@ -4,7 +4,6 @@ import com.nmmedit.apkprotect.dex2c.converter.MyMethodUtil;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
 
-
 /**
  * 基本过滤规则,其他规则必须先通过它, 然后才能处理自定义规则
  */

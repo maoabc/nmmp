@@ -35,7 +35,6 @@ public class GlobalDexConfig {
         ) {
             generateJniInitCode(writer);
         }
-
     }
 
     private void generateJniInitCode(Writer writer) throws IOException {
@@ -72,8 +71,5 @@ public class GlobalDexConfig {
                         "    return JNI_VERSION_1_6;\n" +
                         "}\n\n\n",
                 includeStaOrExternFunc.toString(), initCallSta.toString()));
-
-
     }
-
 }

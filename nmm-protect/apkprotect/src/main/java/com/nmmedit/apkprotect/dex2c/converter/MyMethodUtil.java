@@ -44,7 +44,6 @@ public class MyMethodUtil {
 
         StringBuilder funcName = new StringBuilder("Java_");
 
-
         funcName.append(nameReplace(className).replace('/', '_'));
 
         funcName.append('_');

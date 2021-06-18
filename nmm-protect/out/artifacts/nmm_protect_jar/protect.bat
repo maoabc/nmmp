@@ -1,0 +1,1 @@
+java -jar %~dp0nmm-protect.jar %*

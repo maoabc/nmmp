@@ -39,7 +39,6 @@ public class ResolverCodeGenerator {
         writer.write("#include \"ConstantPool.h\"\n\n");
         writer.write("#include <pthread.h>\n\n\n");
 
-
         generateStringPool(writer);
         generateTypePool(writer);
 
@@ -47,9 +46,7 @@ public class ResolverCodeGenerator {
         generateClassNamePool(writer);
         generateSignaturePool(writer);
 
-
         generateFieldPool(writer);
-
 
         generateMethodPool(writer);
 
@@ -57,8 +54,6 @@ public class ResolverCodeGenerator {
 
         //生成初始化函数及符号解析器结构体
         generateResolver(writer);
-
-
     }
 
     //产生const-string*指令对应的缓存
@@ -80,7 +75,6 @@ public class ResolverCodeGenerator {
         writer.write("};\n");
 
         writer.write(String.format("static jstring gStringConstants[%d];\n\n", constIds.length));
-
     }
 
     private void generateResolver(Writer writer) throws IOException {
@@ -475,5 +469,4 @@ public class ResolverCodeGenerator {
         writer.write("};\n");
         writer.write("//ends method signature pool\n\n");
     }
-
 }

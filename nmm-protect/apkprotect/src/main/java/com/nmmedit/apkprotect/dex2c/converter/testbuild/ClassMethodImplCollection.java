@@ -113,7 +113,6 @@ public class ClassMethodImplCollection implements ClassDef {
             newMethods.add(method);
             methodToC(method);
         }
-
         return newMethods;
     }
 

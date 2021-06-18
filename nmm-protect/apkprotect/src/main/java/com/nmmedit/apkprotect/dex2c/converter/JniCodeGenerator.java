@@ -23,8 +23,6 @@ import java.util.*;
  */
 
 public class JniCodeGenerator {
-
-
     private final boolean isRegisterNative;
 
     private final HashMultimap<String, MyMethod> handledNativeMethods = HashMultimap.create();
@@ -77,9 +75,7 @@ public class JniCodeGenerator {
                 isStatic ? "jclass jcls" : "jobject thiz")
         );
 
-
 //        --------jni函数定义及参数赋值-------
-
 
         //如果寄存器数量比较小直接使用栈上内存,不自己分配和释放
         boolean useStack = registerCount <= 8;
@@ -214,7 +210,6 @@ public class JniCodeGenerator {
             writer.write("    free(regs);\n");
         }
 
-
         //根据返回类型处理jvalue
         if (!returnType.equals("V")) {
             char typeCh = returnType.charAt(0);
@@ -222,11 +217,8 @@ public class JniCodeGenerator {
                     String.format("    return value.%s;\n", Character.toLowerCase(typeCh == '[' ? 'L' : typeCh))
             );
         }
-
         writer.append("}\n\n");
-
     }
-
 
     public Set<String> getHandledNativeClasses() {
         return handledNativeMethods.keySet();
@@ -267,14 +259,11 @@ public class JniCodeGenerator {
             for (DexBackedMethod method : classDef.getMethods()) {
                 addMethod(method, codeWriter);
             }
-
         }
-
 
         generateNativeMethodCode(config, codeWriter);
 
         codeWriter.write(String.format("void %s(JNIEnv *env) {\n", config.getHeaderFileAndSetupFunc().setupFunctionName));
-
 
         codeWriter.write("\n    //符号解析器初始化\n");
         codeWriter.write("    resolver_init(env);\n\n");
@@ -299,7 +288,6 @@ public class JniCodeGenerator {
                     config.getRegisterNativesMethodName(), funName));
         }
         codeWriter.write("}\n");
-
 
         codeWriter.write(
                 "\n\n#ifdef __cplusplus\n" +
@@ -405,7 +393,6 @@ public class JniCodeGenerator {
                 , funName)
         );
     }
-
 
     public static String getJNIType(String type) {
         switch (type) {
