@@ -147,25 +147,17 @@ public class BuildNativeLib {
             final String abi = getAbi();
             switch (abi) {
                 case "armeabi-v7a":
-                    if(Prefs.isArm()) {
                         return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
                                 Prefs.ndkToolchains() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
-                    }
                 case "arm64-v8a":
-                    if(Prefs.isArm64()) {
                         return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
                                 Prefs.ndkToolchains() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
-                    }
                 case "x86":
-                    if(Prefs.isX86()) {
                         return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
                                 Prefs.ndkToolchains() + "/bin/i686-linux-android-strip").getAbsolutePath();
-                    }
                 case "x86_64":
-                    if(Prefs.isX64()) {
                         return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
                                 Prefs.ndkToolchains() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
-                    }
             }
             //不支持arm和x86以外的abi
             throw new RuntimeException("Unsupported abi " + abi);

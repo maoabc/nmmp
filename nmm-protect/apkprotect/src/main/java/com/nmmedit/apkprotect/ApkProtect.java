@@ -226,10 +226,7 @@ public class ApkProtect {
         abis.remove("armeabi");
         if (abis.isEmpty()) {
             //默认只生成armeabi-v7a
-            System.out.println(Arrays.asList(Prefs.isArm() ? "armeabi-v7a" : "", Prefs.isArm64() ? "arm64-v8a" : "",
-                    Prefs.isX86() ? "x86" : "", Prefs.isX64() ? "x86_64" : ""));
-
-            ArrayList<String> abi = new ArrayList<String>();
+            ArrayList<String> abi = new ArrayList<>();
             if(Prefs.isArm()) {
                 abi.add("armeabi-v7a");
             }
