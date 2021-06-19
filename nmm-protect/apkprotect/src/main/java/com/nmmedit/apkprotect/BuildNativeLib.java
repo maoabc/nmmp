@@ -1,7 +1,6 @@
 package com.nmmedit.apkprotect;
 
 import com.nmmedit.apkprotect.data.Prefs;
-import com.nmmedit.apkprotect.util.OsDetector;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -51,7 +50,7 @@ public class BuildNativeLib {
         try {
             final int exitStatus = process.waitFor();
             if (exitStatus != 0) {
-                throw new IOException(String.format("Cmd '%s' exec failed",cmds.toString()));
+                throw new IOException(String.format("Cmd '%s' exec failed", cmds.toString()));
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -141,17 +140,17 @@ public class BuildNativeLib {
             final String abi = getAbi();
             switch (abi) {
                 case "armeabi-v7a":
-                        return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
-                                Prefs.osName() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
+                    return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
+                            Prefs.osName() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
                 case "arm64-v8a":
-                        return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
-                                Prefs.osName() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
+                    return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
+                            Prefs.osName() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
                 case "x86":
-                        return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
-                                Prefs.osName() + "/bin/i686-linux-android-strip").getAbsolutePath();
+                    return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
+                            Prefs.osName() + "/bin/i686-linux-android-strip").getAbsolutePath();
                 case "x86_64":
-                        return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
-                                Prefs.osName() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
+                    return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
+                            Prefs.osName() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
             }
             //不支持arm和x86以外的abi
             throw new RuntimeException("Unsupported abi " + abi);
@@ -187,18 +186,26 @@ public class BuildNativeLib {
 
         //最后输出的so文件
         public List<File> getSharedObjectFile() {
-            if(OsDetector.isWindows()){
-                return Arrays.asList(
-                        new File(getBuildPath(), "vm/libnmmvm.so"),
-                        new File(getBuildPath(), "libnmmp.so")
-                );
+            //linux,etc.
+            File vmSo = new File(getLibOutputDir(), "libnmmvm.so");
+            File mpSo = new File(getLibOutputDir(), "libnmmp.so");
 
-            }else {
-                return Arrays.asList(
-                        new File(getLibOutputDir(), "libnmmvm.so"),
-                        new File(getLibOutputDir(), "libnmmp.so")
-                );
+            if (!vmSo.exists()) {
+                //windows
+                vmSo = new File(getBuildPath(), "vm/libnmmvm.so");
             }
+            if (!vmSo.exists()) {
+                throw new RuntimeException("Not Found so: " + vmSo.getAbsolutePath());
+            }
+
+            if (!mpSo.exists()) {
+                mpSo = new File(getBuildPath(), "libnmmp.so");
+            }
+            if (!mpSo.exists()) {
+                throw new RuntimeException("Not Found so: " + mpSo.getAbsolutePath());
+            }
+
+            return Arrays.asList(vmSo, mpSo);
         }
 
         public enum BuildType {
