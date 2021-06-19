@@ -15,6 +15,6 @@
     // Indicate under which platform the NDK is installed
     "ndk": {
         // For Linux: linux-x86_64
-        "toolchains":"windows-x86_64" // E:\Android\Sdk\ndk\22.0.7026061\toolchains\arm-linux-androideabi-4.9\prebuilt\windows-x86_64\bin
+        "os_name":"windows-x86_64" // E:\Android\Sdk\ndk\22.0.7026061\toolchains\arm-linux-androideabi-4.9\prebuilt\windows-x86_64\bin
     }
 }

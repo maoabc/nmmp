@@ -159,7 +159,7 @@ public class ApkProtect {
     private void addFileToZip(ZipOutputStream zipOutput, File file, ZipEntry zipEntry) throws IOException {
         zipOutput.putNextEntry(zipEntry);
         try (FileInputStream input = new FileInputStream(file);) {
-            copyStream(input, zipOutput);
+            FileUtils.copyStream(input, zipOutput);
         }
         zipOutput.closeEntry();
     }
@@ -227,18 +227,18 @@ public class ApkProtect {
         if (abis.isEmpty()) {
             //默认只生成armeabi-v7a
             ArrayList<String> abi = new ArrayList<>();
-            if(Prefs.isArm()) {
+            if (Prefs.isArm()) {
                 abi.add("armeabi-v7a");
             }
-            if(Prefs.isArm64()) {
+            if (Prefs.isArm64()) {
                 abi.add("arm64-v8a");
             }
 
-            if(Prefs.isX86()) {
+            if (Prefs.isX86()) {
                 abi.add("x86");
             }
 
-            if(Prefs.isX64()) {
+            if (Prefs.isX64()) {
                 abi.add("x86_64");
             }
             return abi;
@@ -247,10 +247,19 @@ public class ApkProtect {
     }
 
     private void generateCSources(String packageName) throws IOException {
-        final List<File> cSources = ApkUtils.extractFiles(
-                new File(FileUtils.getHomePath(), "tools/vmsrc.zip"), ".*", apkFolders.getDex2cSrcDir()
+        final File vmsrcFile = new File(FileUtils.getHomePath(), "tools/vmsrc.zip");
+        if (!vmsrcFile.exists()) {
+            vmsrcFile.getParentFile().mkdirs();
+            //copy vmsrc.zip to external directory
+            try (
+                    InputStream inputStream = ApkProtect.class.getResourceAsStream("/vmsrc.zip");
+                    final FileOutputStream outputStream = new FileOutputStream(vmsrcFile);
+            ) {
+                FileUtils.copyStream(inputStream, outputStream);
+            }
+        }
+        final List<File> cSources = ApkUtils.extractFiles(vmsrcFile, ".*", apkFolders.getDex2cSrcDir());
 
-        );
         //处理指令及apk验证,生成新的c文件
         for (File source : cSources) {
             if (source.getName().endsWith("DexOpcodes.h")) {
@@ -576,7 +585,7 @@ public class ApkProtect {
             zipOutputStream.putNextEntry(zipEntry);
 
             try (final FileInputStream fileIn = new FileInputStream(fileObj.file)) {
-                copyStream(fileIn, zipOutputStream);
+                FileUtils.copyStream(fileIn, zipOutputStream);
             }
             zipOutputStream.closeEntry();
         }
@@ -613,13 +622,6 @@ public class ApkProtect {
         return crc32.getValue();
     }
 
-    private static void copyStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[4 * 1024];
-        int len;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
-        }
-    }
 
     private static class FileObj {
         private final File file;

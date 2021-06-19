@@ -3,18 +3,34 @@ package com.nmmedit.apkprotect.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.nmmedit.apkprotect.data.config.Config;
-import com.nmmedit.apkprotect.data.config.Constants;
 import com.nmmedit.apkprotect.util.FileUtils;
+import com.nmmedit.apkprotect.util.OsDetector;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class Prefs {
+    public static final String CONFIG_PATH = new File(FileUtils.getHomePath(), "tools/config.json").getAbsolutePath();
+
     public static Config config() {
+        final File configFile = new File(CONFIG_PATH);
+        if (!configFile.exists()) {
+            configFile.getParentFile().mkdirs();
+            try (
+                    final InputStream inputStream = Prefs.class.getResourceAsStream("/" + (OsDetector.isWindows() ? "config-windows.json" : "config.json"));
+                    final FileOutputStream outputStream = new FileOutputStream(configFile);
+            ) {
+                FileUtils.copyStream(inputStream, outputStream);
+            } catch (IOException e) {
+            }
+        }
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         try {
-            String content = FileUtils.readFile(Constants.CONFIG_PATH, StandardCharsets.UTF_8);
+            String content = FileUtils.readFile(CONFIG_PATH, StandardCharsets.UTF_8);
             return gson.fromJson(content, Config.class);
         } catch (IOException e) {
             e.printStackTrace();
@@ -50,7 +66,7 @@ public class Prefs {
         return config().path.ndk;
     }
 
-    public static String ndkToolchains() {
-        return config().ndk.toolchains;
+    public static String getOsName() {
+        return config().ndk.osName;
     }
 }

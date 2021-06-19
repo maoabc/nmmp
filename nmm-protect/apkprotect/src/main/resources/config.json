@@ -1,0 +1,19 @@
+{
+  // Choose under which architecture you need to build C++ libraries
+  "abi": {
+    "armeabi-v7a": true,
+    "arm64-v8a": false,
+    "x86": true,
+    "x86_64": false
+  },
+  // If you do not have environment variables set, enter the path to SDK, NDK and CMAKE
+  "path": {
+    "sdk": "/opt/android-sdk",
+    "cmake": "/opt/android-sdk/cmake/3.18.1",
+    "ndk": "/opt/android-sdk/ndk/22.1.7171670"
+  },
+  // Indicate under which platform the NDK is installed
+  "ndk": {
+    "os_name": "linux-x86_64"
+  }
+}

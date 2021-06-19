@@ -125,17 +125,10 @@ public class BuildNativeLib {
             return abi;
         }
 
-        public String getVmLibOutputDir() {
-            return new File(new File(getProjectHome(), ".cxx/cmake/Release"), abi + File.separator + "vm").getAbsolutePath();
-        }
-
         public String getLibOutputDir() {
             return new File(new File(getProjectHome(), "obj"), abi).getAbsolutePath();
         }
 
-        public String getVpLibOutputDir() {
-            return new File(new File(getProjectHome(), ".cxx/cmake/Release"), abi).getAbsolutePath();
-        }
 
         //camke --build <BuildPath>
         public String getBuildPath() {
@@ -148,16 +141,16 @@ public class BuildNativeLib {
             switch (abi) {
                 case "armeabi-v7a":
                         return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
-                                Prefs.ndkToolchains() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
+                                Prefs.getOsName() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
                 case "arm64-v8a":
                         return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
-                                Prefs.ndkToolchains() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
+                                Prefs.getOsName() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
                 case "x86":
                         return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
-                                Prefs.ndkToolchains() + "/bin/i686-linux-android-strip").getAbsolutePath();
+                                Prefs.getOsName() + "/bin/i686-linux-android-strip").getAbsolutePath();
                 case "x86_64":
                         return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
-                                Prefs.ndkToolchains() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
+                                Prefs.getOsName() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
             }
             //不支持arm和x86以外的abi
             throw new RuntimeException("Unsupported abi " + abi);
@@ -194,8 +187,8 @@ public class BuildNativeLib {
         //最后输出的so文件
         public List<File> getSharedObjectFile() {
             return Arrays.asList(
-                    new File(getVmLibOutputDir(), "libnmmvm.so"),
-                    new File(getVpLibOutputDir(), "libnmmp.so")
+                    new File(getLibOutputDir(), "libnmmvm.so"),
+                    new File(getLibOutputDir(), "libnmmp.so")
             );
         }
 
