@@ -16,7 +16,6 @@ import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 
-import javax.annotation.Nonnull;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +28,6 @@ public class Dex2c {
 
     private Dex2c() {
     }
-
-
-
 
     /**
      * 处理多个dex文件
@@ -214,9 +210,9 @@ public class Dex2c {
      * @param dexFile
      * @param newType
      */
-    public static void addApplicationClass(@Nonnull DexFile dexFile,
-                                           @Nonnull DexPool newDex,
-                                           @Nonnull final String newType) {
+    public static void addApplicationClass(DexFile dexFile,
+                                           DexPool newDex,
+                                           final String newType) {
 
         ClassDef appDirectSubClassDef = null;
         List<ClassDef> parents = getClassDefParents(dexFile.getClasses(), newType, LANDROID_APP_APPLICATION);
@@ -238,11 +234,9 @@ public class Dex2c {
     }
 
     //查找某个类所有父类
-    @Nonnull
-    private static List<ClassDef> getClassDefParents(@Nonnull final Set<? extends ClassDef> classes, @Nonnull String type, @Nonnull String rootType) {
+    private static List<ClassDef> getClassDefParents(final Set<? extends ClassDef> classes, String type, String rootType) {
         String tmpType = type;
         final ArrayList<ClassDef> parents = new ArrayList<>();
-
 
         //创建类型名和classDef对应关系
         final Map<String, ClassDef> classDefMap = Maps.newHashMap();
@@ -263,9 +257,6 @@ public class Dex2c {
             tmpType = classDef.getSuperclass();
             parents.add(classDef);
         }
-
         return parents;
     }
-
-
 }

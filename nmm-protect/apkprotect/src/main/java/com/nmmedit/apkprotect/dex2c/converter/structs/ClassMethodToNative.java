@@ -123,7 +123,6 @@ public class ClassMethodToNative extends BaseTypeReference implements ClassDef {
         };
     }
 
-
     //方法转换为native方法
     private Method methodToNative(final Method method) {
         if (filter.acceptMethod(method)) {

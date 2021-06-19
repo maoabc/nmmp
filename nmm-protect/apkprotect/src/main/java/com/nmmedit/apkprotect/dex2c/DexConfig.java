@@ -14,7 +14,6 @@ public class DexConfig {
     private final File outputDir;
     private final String dexName;
 
-
     //jnicodegenerator 处理完成后,缓存已处理的类及方法
     private Set<String> handledNativeClasses;
     private Map<String, Integer> nativeMethodOffsets;
@@ -60,7 +59,6 @@ public class DexConfig {
         nativeMethodOffsets = codeGenerator.getNativeMethodOffsets();
     }
 
-
     /**
      * 方法被标识为native的dex,用于替换原dex
      */
@@ -91,7 +89,6 @@ public class DexConfig {
                 dexName + "_setup");
 
     }
-
 
     /**
      * 符号解析器代码文件

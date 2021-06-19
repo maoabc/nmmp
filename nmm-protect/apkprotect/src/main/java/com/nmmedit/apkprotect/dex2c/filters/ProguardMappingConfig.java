@@ -22,7 +22,6 @@ public abstract class ProguardMappingConfig implements ClassAndMethodFilter, Map
         mappingReader.parse(this);
     }
 
-
     @Override
     public final boolean acceptClass(ClassDef classDef) {
         //先处理上游的过滤规则,如果上游不通过则直接返回不再处理,如果上游通过再处理当前的过滤规则

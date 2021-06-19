@@ -25,7 +25,6 @@ public class ApkVerifyCodeGenerator {
                 sb.append("    \\\\\n    ");
             }
             sb.append(String.format("0x%02x, ", publicKey[i] & 0xFF));
-
         }
         return sb.toString();
     }

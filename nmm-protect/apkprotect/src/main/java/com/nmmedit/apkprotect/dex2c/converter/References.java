@@ -67,7 +67,6 @@ public class References {
         extStringRefs.add(typeToClassName(type));
 
         typeRefs.add(type);
-
     }
 
     private void addConstStringRef(String type) {
@@ -108,7 +107,6 @@ public class References {
         //shorty,用于确定方法调用参数类型
         addExtStringRef(MethodUtil.getShorty(parameterTypes, returnType));
 
-
         addTypeRef(returnType);
 
         //查找方法时需要，提前计算
@@ -117,7 +115,6 @@ public class References {
 
     private void addFieldRef(FieldReference reference, boolean isStatic) {
         addTypeRef(reference.getDefiningClass());
-
 
         addStringRef(reference.getName());
 
@@ -128,7 +125,6 @@ public class References {
 
     private void addMethodRef(MethodReference reference, boolean isStatic) {
         addTypeRef(reference.getDefiningClass());
-
 
         addStringRef(reference.getName());
 
@@ -162,7 +158,6 @@ public class References {
                 addMethodRef(method, false);
             }
 
-
             //收集方法指令内的引用
             for (Method method : classDef.getMethods()) {
                 MethodImplementation implementation = method.getImplementation();
@@ -192,7 +187,6 @@ public class References {
                 stringPoolIndexMap.put(ref, stringPool.size() - 1);
             }
         }
-
     }
 
     //解析所有引用指令,得到各种引用信息或者检测不支持指令
@@ -247,7 +241,6 @@ public class References {
                 case SPUT_WIDE:
                 case SPUT_OBJECT: {
                     FieldReference reference = (FieldReference) ((ReferenceInstruction) instruction).getReference();
-
 
                     addFieldRef(reference, true);
                     break;
@@ -543,5 +536,4 @@ public class References {
             return reference.hashCode();
         }
     }
-
 }

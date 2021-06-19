@@ -1,6 +1,8 @@
 package com.nmmedit.apkprotect;
 
-import javax.annotation.Nonnull;
+import com.nmmedit.apkprotect.data.Prefs;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
@@ -8,7 +10,7 @@ import java.util.List;
 public class BuildNativeLib {
 
     //编译出native lib，同时返回最后的so文件
-    public static List<File> build(CMakeOptions options) throws IOException {
+    public static List<File> build(@NotNull CMakeOptions options) throws IOException {
 
         final List<String> cmakeArguments = options.getCmakeArguments();
         //cmake
@@ -35,7 +37,7 @@ public class BuildNativeLib {
         return sharedObjectPath;
     }
 
-    private static void execCmd(@Nonnull List<String> cmds) throws IOException {
+    private static void execCmd(List<String> cmds) throws IOException {
         System.out.println(cmds);
         final ProcessBuilder builder = new ProcessBuilder()
                 .command(cmds);
@@ -67,31 +69,25 @@ public class BuildNativeLib {
      * cmake相关配置
      */
     public static class CMakeOptions {
-        @Nonnull
         private final String cmakePath;
 
-        @Nonnull
         private final String sdkHome;
 
-        @Nonnull
         private final String ndkHome;
         private final int apiLevel;
-        @Nonnull
         private final String projectHome;
 
-        @Nonnull
         private final BuildType buildType;
 
-        @Nonnull
         private final String abi;
 
-        public CMakeOptions(@Nonnull String cmakePath,
-                            @Nonnull String sdkHome,
-                            @Nonnull String ndkHome,
+        public CMakeOptions(String cmakePath,
+                            String sdkHome,
+                            String ndkHome,
                             int apiLevel,
-                            @Nonnull String projectHome,
-                            @Nonnull BuildType buildType,
-                            @Nonnull String abi) {
+                            String projectHome,
+                            BuildType buildType,
+                            String abi) {
             this.cmakePath = cmakePath;
             this.sdkHome = sdkHome;
             this.ndkHome = ndkHome;
@@ -101,17 +97,14 @@ public class BuildNativeLib {
             this.abi = abi;
         }
 
-        @Nonnull
         public String getCmakePath() {
             return cmakePath;
         }
 
-        @Nonnull
         public String getSdkHome() {
             return sdkHome;
         }
 
-        @Nonnull
         public String getNdkHome() {
             return ndkHome;
         }
@@ -120,65 +113,64 @@ public class BuildNativeLib {
             return apiLevel;
         }
 
-        @Nonnull
         public String getProjectHome() {
             return projectHome;
         }
 
-        @Nonnull
         public BuildType getBuildType() {
             return buildType;
         }
 
-        @Nonnull
         public String getAbi() {
             return abi;
         }
 
-        @Nonnull
+        public String getVmLibOutputDir() {
+            return new File(new File(getProjectHome(), ".cxx/cmake/Release"), abi + File.separator + "vm").getAbsolutePath();
+        }
+
         public String getLibOutputDir() {
             return new File(new File(getProjectHome(), "obj"), abi).getAbsolutePath();
         }
 
+        public String getVpLibOutputDir() {
+            return new File(new File(getProjectHome(), ".cxx/cmake/Release"), abi).getAbsolutePath();
+        }
+
         //camke --build <BuildPath>
-        @Nonnull
         public String getBuildPath() {
             return new File(getProjectHome(),
                     String.format(".cxx/cmake/%s/%s", getBuildType().getBuildTypeName(), getAbi())).getAbsolutePath();
         }
 
-        @Nonnull
         public String getStripBinaryPath() {
             final String abi = getAbi();
             switch (abi) {
                 case "armeabi-v7a":
-                    return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
-                            "linux-x86_64/bin/arm-linux-androideabi-strip").getAbsolutePath();
+                        return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
+                                Prefs.ndkToolchains() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
                 case "arm64-v8a":
-                    return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
-                            "linux-x86_64/bin/aarch64-linux-android-strip").getAbsolutePath();
+                        return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
+                                Prefs.ndkToolchains() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
                 case "x86":
-                    return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
-                            "linux-x86_64/bin/i686-linux-android-strip").getAbsolutePath();
+                        return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
+                                Prefs.ndkToolchains() + "/bin/i686-linux-android-strip").getAbsolutePath();
                 case "x86_64":
-                    return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
-                            "linux-x86_64/bin/x86_64-linux-android-strip").getAbsolutePath();
+                        return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
+                                Prefs.ndkToolchains() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
             }
             //不支持arm和x86以外的abi
             throw new RuntimeException("Unsupported abi " + abi);
         }
 
-        @Nonnull
         public String getCmakeBinaryPath() {
             return new File(getCmakePath(), "/bin/cmake").getAbsolutePath();
         }
 
-        @Nonnull
         public String getNinjaBinaryPath() {
             return new File(getCmakePath(), "/bin/ninja").getAbsolutePath();
         }
 
-        @Nonnull
         public List<String> getCmakeArguments() {
             return Arrays.asList(
                     getCmakeBinaryPath(),
@@ -200,18 +192,16 @@ public class BuildNativeLib {
         }
 
         //最后输出的so文件
-        @Nonnull
         public List<File> getSharedObjectFile() {
             return Arrays.asList(
-                    new File(getLibOutputDir(), "libnmmvm.so"),
-                    new File(getLibOutputDir(), "libnmmp.so")
+                    new File(getVmLibOutputDir(), "libnmmvm.so"),
+                    new File(getVpLibOutputDir(), "libnmmp.so")
             );
         }
 
         public enum BuildType {
             DEBUG("Debug"),
             RELEASE("Release");
-
 
             private final String buildTypeName;
 

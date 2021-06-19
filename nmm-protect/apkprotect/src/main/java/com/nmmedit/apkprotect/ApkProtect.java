@@ -1,6 +1,7 @@
 package com.nmmedit.apkprotect;
 
 import com.nmmedit.apkprotect.andres.AxmlEdit;
+import com.nmmedit.apkprotect.data.Prefs;
 import com.nmmedit.apkprotect.dex2c.Dex2c;
 import com.nmmedit.apkprotect.dex2c.DexConfig;
 import com.nmmedit.apkprotect.dex2c.GlobalDexConfig;
@@ -9,6 +10,7 @@ import com.nmmedit.apkprotect.dex2c.converter.structs.RegisterNativesUtilClassDe
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import com.nmmedit.apkprotect.sign.ApkVerifyCodeGenerator;
 import com.nmmedit.apkprotect.util.ApkUtils;
+import com.nmmedit.apkprotect.util.FileUtils;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
@@ -17,7 +19,6 @@ import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 
-import javax.annotation.Nonnull;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,15 +31,13 @@ public class ApkProtect {
 
     public static final String ANDROID_MANIFEST_XML = "AndroidManifest.xml";
     public static final String ANDROID_APP_APPLICATION = "android.app.Application";
-    @Nonnull
     private final ApkFolders apkFolders;
-    @Nonnull
     private final InstructionRewriter instructionRewriter;
     private final ApkVerifyCodeGenerator apkVerifyCodeGenerator;
     private final ClassAndMethodFilter filter;
 
-    private ApkProtect(@Nonnull ApkFolders apkFolders,
-                       @Nonnull InstructionRewriter instructionRewriter,
+    private ApkProtect(ApkFolders apkFolders,
+                       InstructionRewriter instructionRewriter,
                        ApkVerifyCodeGenerator apkVerifyCodeGenerator,
                        ClassAndMethodFilter filter
     ) {
@@ -67,7 +66,6 @@ public class ApkProtect {
             }
             final String packageName = AxmlEdit.getPackageName(manifestBytes);
 
-
             //生成一些需要改变的c代码(随机opcode后的头文件及apk验证代码等)
             generateCSources(packageName);
 
@@ -92,7 +90,6 @@ public class ApkProtect {
 
             mainDexClassTypeSet.addAll(appClassTypes);
 
-
             //在处理过的class的静态初始化方法里插入调用注册本地方法的指令
             //static {
             //    NativeUtils.initClass(0);
@@ -102,7 +99,6 @@ public class ApkProtect {
                     mainDexClassTypeSet,
                     60000,
                     apkFolders.getTempDexDir());
-
 
             //主dex里处理so加载问题
             File mainDex = outDexFiles.get(0);
@@ -152,26 +148,17 @@ public class ApkProtect {
 
                         addFileToZip(zipOutput, file, zipEntry);
                     }
-
                 }
-
-
             }
-
         } finally {
             //删除解压缓存目录
             deleteFile(zipExtractDir);
         }
-        //
-
-
     }
 
     private void addFileToZip(ZipOutputStream zipOutput, File file, ZipEntry zipEntry) throws IOException {
         zipOutput.putNextEntry(zipEntry);
-        try (
-                FileInputStream input = new FileInputStream(file);
-        ) {
+        try (FileInputStream input = new FileInputStream(file);) {
             copyStream(input, zipOutput);
         }
         zipOutput.closeEntry();
@@ -181,16 +168,16 @@ public class ApkProtect {
         String cmakePath = System.getenv("CMAKE_PATH");
         if (isEmpty(cmakePath)) {
             System.err.println("No CMAKE_PATH");
-            cmakePath = "";
+            cmakePath = Prefs.cmakePath();
         }
         String sdkHome = System.getenv("ANDROID_SDK_HOME");
         if (isEmpty(sdkHome)) {
-            sdkHome = "/opt/android-sdk";
+            sdkHome = Prefs.sdkPath();
             System.err.println("No ANDROID_SDK_HOME. Default is " + sdkHome);
         }
         String ndkHome = System.getenv("ANDROID_NDK_HOME");
         if (isEmpty(ndkHome)) {
-            ndkHome = "/opt/android-sdk/ndk/22.1.7171670";
+            ndkHome = Prefs.ndkPath();
             System.err.println("No ANDROID_NDK_HOME. Default is " + ndkHome);
         }
 
@@ -239,14 +226,30 @@ public class ApkProtect {
         abis.remove("armeabi");
         if (abis.isEmpty()) {
             //默认只生成armeabi-v7a
-            return Arrays.asList("armeabi-v7a"/*, "arm64-v8a", "x86", "x86_64"*/);
+            ArrayList<String> abi = new ArrayList<>();
+            if(Prefs.isArm()) {
+                abi.add("armeabi-v7a");
+            }
+            if(Prefs.isArm64()) {
+                abi.add("arm64-v8a");
+            }
+
+            if(Prefs.isX86()) {
+                abi.add("x86");
+            }
+
+            if(Prefs.isX64()) {
+                abi.add("x86_64");
+            }
+            return abi;
         }
         return new ArrayList<>(abis);
     }
 
     private void generateCSources(String packageName) throws IOException {
         final List<File> cSources = ApkUtils.extractFiles(
-                ApkProtect.class.getResourceAsStream("/vmsrc.zip"), ".*", apkFolders.getDex2cSrcDir()
+                new File(FileUtils.getHomePath(), "tools/vmsrc.zip"), ".*", apkFolders.getDex2cSrcDir()
+
         );
         //处理指令及apk验证,生成新的c文件
         for (File source : cSources) {
@@ -260,7 +263,6 @@ public class ApkProtect {
         }
     }
 
-    @Nonnull
     private static List<File> getClassesFiles(File apkFile, File zipExtractDir) throws IOException {
         List<File> files = ApkUtils.extractFiles(apkFile, "classes(\\d+)*\\.dex", zipExtractDir);
         //根据classes索引大小排序
@@ -307,11 +309,9 @@ public class ApkProtect {
                 .matcher(headerContent)
                 .replaceAll(String.format("_name[kNumPackedOpcodes] = {        \\\\\n%s};\n", gotoTableContent));
 
-
         try (FileWriter fileWriter = new FileWriter(source)) {
             fileWriter.write(headerContent);
         }
-
     }
 
     //读取证书信息,并把公钥写入签名验证文件里,运行时对apk进行签名校验
@@ -333,8 +333,6 @@ public class ApkProtect {
         }
     }
 
-
-    @Nonnull
     private static File dexWriteToFile(DexPool dexPool, int index, File dexOutDir) throws IOException {
         if (!dexOutDir.exists()) dexOutDir.mkdirs();
 
@@ -349,7 +347,6 @@ public class ApkProtect {
         return outDexFile;
     }
 
-    @Nonnull
     private static List<String> getApplicationClassesFromMainDex(GlobalDexConfig globalConfig, String applicationClass) throws IOException {
         final List<String> mainDexClassList = new ArrayList<>();
         String tmpType = classDotNameToType(applicationClass);
@@ -397,7 +394,6 @@ public class ApkProtect {
      * @return
      * @throws IOException
      */
-    @Nonnull
     private static List<File> injectInstructionAndWriteToFile(GlobalDexConfig globalConfig,
                                                               Set<String> mainClassSet,
                                                               int maxPoolSize,
@@ -465,7 +461,6 @@ public class ApkProtect {
      * @return 返回新二进制xml文件
      * @throws IOException
      */
-    @Nonnull
     private static File handleApplicationClass(byte[] manifestBytes,
                                                String applicationClassName,
                                                File mainDex,

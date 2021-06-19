@@ -27,7 +27,6 @@ public class JniTemp {
     public static String genJniCode(String classType, String methodName, List<? extends CharSequence> parameterTypes, boolean isStatic, int registerCount, int parameterRegisterCount, String returnType) {
         StringBuilder params = new StringBuilder();
 
-
         //寄存器初始化
         StringBuilder regsAss = new StringBuilder(String.format("    u8 regs[%d];\n    memset(regs, 0, sizeof(regs));\n", registerCount));
 
@@ -83,7 +82,6 @@ public class JniTemp {
             jniCode += String.format("    return value.%s;\n", Character.toLowerCase(typeCh == '[' ? 'L' : typeCh));
         }
         jniCode += "}\n";
-
 
         return jniCode;
     }

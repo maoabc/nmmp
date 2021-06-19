@@ -63,7 +63,6 @@ public final class ApkUtils {
         }
     }
 
-
     /**
      * Returns a file whose name matches {@code filename}, or null if no file was found.
      *
@@ -220,5 +219,4 @@ public final class ApkUtils {
         }
         return files;
     }
-
 }
