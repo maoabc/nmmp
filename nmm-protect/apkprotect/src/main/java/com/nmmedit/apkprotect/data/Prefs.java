@@ -33,8 +33,7 @@ public class Prefs {
             String content = FileUtils.readFile(CONFIG_PATH, StandardCharsets.UTF_8);
             return gson.fromJson(content, Config.class);
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException("Load config failed", e);
         }
     }
 
@@ -66,7 +65,7 @@ public class Prefs {
         return config().path.ndk;
     }
 
-    public static String getOsName() {
+    public static String osName() {
         return config().ndk.osName;
     }
 }

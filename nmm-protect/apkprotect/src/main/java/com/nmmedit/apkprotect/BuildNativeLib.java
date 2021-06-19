@@ -1,6 +1,7 @@
 package com.nmmedit.apkprotect;
 
 import com.nmmedit.apkprotect.data.Prefs;
+import com.nmmedit.apkprotect.util.OsDetector;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -141,16 +142,16 @@ public class BuildNativeLib {
             switch (abi) {
                 case "armeabi-v7a":
                         return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
-                                Prefs.getOsName() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
+                                Prefs.osName() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
                 case "arm64-v8a":
                         return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
-                                Prefs.getOsName() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
+                                Prefs.osName() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
                 case "x86":
                         return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
-                                Prefs.getOsName() + "/bin/i686-linux-android-strip").getAbsolutePath();
+                                Prefs.osName() + "/bin/i686-linux-android-strip").getAbsolutePath();
                 case "x86_64":
                         return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
-                                Prefs.getOsName() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
+                                Prefs.osName() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
             }
             //不支持arm和x86以外的abi
             throw new RuntimeException("Unsupported abi " + abi);
@@ -186,10 +187,18 @@ public class BuildNativeLib {
 
         //最后输出的so文件
         public List<File> getSharedObjectFile() {
-            return Arrays.asList(
-                    new File(getLibOutputDir(), "libnmmvm.so"),
-                    new File(getLibOutputDir(), "libnmmp.so")
-            );
+            if(OsDetector.isWindows()){
+                return Arrays.asList(
+                        new File(getBuildPath(), "vm/libnmmvm.so"),
+                        new File(getBuildPath(), "libnmmp.so")
+                );
+
+            }else {
+                return Arrays.asList(
+                        new File(getLibOutputDir(), "libnmmvm.so"),
+                        new File(getLibOutputDir(), "libnmmp.so")
+                );
+            }
         }
 
         public enum BuildType {
