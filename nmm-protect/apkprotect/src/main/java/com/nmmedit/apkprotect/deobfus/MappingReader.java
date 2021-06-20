@@ -1,4 +1,4 @@
-package com.nmmedit.apkprotect.obfus;
+package com.nmmedit.apkprotect.deobfus;
 
 import java.io.BufferedReader;
 import java.io.File;

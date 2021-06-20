@@ -1,6 +1,6 @@
 package com.nmmedit.apkprotect.dex2c.filters;
 
-import com.nmmedit.apkprotect.obfus.MappingReader;
+import com.nmmedit.apkprotect.deobfus.MappingReader;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
 

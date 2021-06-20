@@ -1,4 +1,4 @@
-package com.nmmedit.apkprotect.obfus;
+package com.nmmedit.apkprotect.deobfus;
 
 public class Pair<T> {
     public final T first;

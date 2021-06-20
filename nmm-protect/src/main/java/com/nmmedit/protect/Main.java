@@ -6,7 +6,7 @@ import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.RandomInstruct
 import com.nmmedit.apkprotect.dex2c.filters.BasicKeepConfig;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import com.nmmedit.apkprotect.dex2c.filters.ProguardMappingConfig;
-import com.nmmedit.apkprotect.obfus.MappingReader;
+import com.nmmedit.apkprotect.deobfus.MappingReader;
 import com.nmmedit.apkprotect.sign.ApkVerifyCodeGenerator;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("No Input apk.");
-            System.err.println("<inApk> ");
+            System.err.println("<inApk> [<keepRuleFile> [mapping.txt]]");
             System.exit(-1);
         }
         final File apk = new File(args[0]);

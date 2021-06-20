@@ -1,4 +1,4 @@
-package com.nmmedit.apkprotect.obfus;
+package com.nmmedit.apkprotect.deobfus;
 
 public interface MappingProcessor {
     /**
