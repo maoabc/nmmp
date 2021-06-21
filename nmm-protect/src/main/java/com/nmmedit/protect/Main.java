@@ -2,48 +2,42 @@ package com.nmmedit.protect;
 
 import com.nmmedit.apkprotect.ApkFolders;
 import com.nmmedit.apkprotect.ApkProtect;
-import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.RandomInstructionRewriter;
-import com.nmmedit.apkprotect.dex2c.filters.BasicKeepConfig;
-import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
-import com.nmmedit.apkprotect.dex2c.filters.ProguardMappingConfig;
 import com.nmmedit.apkprotect.deobfus.MappingReader;
+import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.RandomInstructionRewriter;
+import com.nmmedit.apkprotect.dex2c.filters.*;
 import com.nmmedit.apkprotect.sign.ApkVerifyCodeGenerator;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.Method;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("No Input apk.");
-            System.err.println("<inApk> [<keepRuleFile> [mapping.txt]]");
+            System.err.println("<inApk> [<convertRuleFile> [mapping.txt]]");
             System.exit(-1);
         }
         final File apk = new File(args[0]);
         final File outDir = new File(apk.getParentFile(), "build");
 
-
         ClassAndMethodFilter filterConfig = new BasicKeepConfig();
-        if (args.length == 2) {//根据proguard的mapping.txt得到混淆前的类名和方法名，然后判断是否要保留
-            final MappingReader mappingReader = new MappingReader(new File(args[1]));
-            filterConfig = new ProguardMappingConfig(new BasicKeepConfig(), mappingReader) {
-                @Override
-                protected boolean keepClass(ClassDef classDef) {
-                    final String className = getOriginClassName(classDef.getType());
-                    //todo 自定义规则
-                    return false;
-                }
-
-
-                @Override
-                protected boolean keepMethod(Method method) {
-                    return false;
-                }
-            };
+        final SimpleRule simpleRule = new SimpleRule();
+        if (args.length > 1) {
+            simpleRule.parse(new InputStreamReader(new FileInputStream(args[1]), StandardCharsets.UTF_8));
+        } else {
+            //all classes
+            simpleRule.parse(new StringReader("class *"));
         }
+
+        if (args.length > 2) {
+            final MappingReader mappingReader = new MappingReader(new File(args[2]));
+            filterConfig = new ProguardMappingConfig(filterConfig, mappingReader, simpleRule);
+        } else {
+            filterConfig = new SimpleConvertConfig(new BasicKeepConfig(), simpleRule);
+        }
+
+
 
         final ApkFolders apkFolders = new ApkFolders(apk, outDir);
 

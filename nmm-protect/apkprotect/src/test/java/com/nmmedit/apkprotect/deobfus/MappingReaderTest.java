@@ -20,7 +20,7 @@ public class MappingReaderTest {
         reader.parse(new MappingProcessor() {
             @Override
             public void processClassMapping(String className, String newClassName) {
-                System.out.println("className "+className+"  "+newClassName);
+//                System.out.println("className "+className+"  "+newClassName);
             }
 
             @Override
@@ -30,7 +30,7 @@ public class MappingReaderTest {
 
             @Override
             public void processMethodMapping(String className, int firstLineNumber, int lastLineNumber, String methodReturnType, String methodName, String methodArguments, String newClassName, int newFirstLineNumber, int newLastLineNumber, String newMethodName) {
-
+                System.out.println(methodArguments);
             }
         });
         tempFile.delete();
