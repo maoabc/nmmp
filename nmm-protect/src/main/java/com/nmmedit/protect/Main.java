@@ -22,19 +22,19 @@ public class Main {
         final File outDir = new File(apk.getParentFile(), "build");
 
         ClassAndMethodFilter filterConfig = new BasicKeepConfig();
-        final SimpleRule simpleRule = new SimpleRule();
+        final SimpleRules simpleRules = new SimpleRules();
         if (args.length > 1) {
-            simpleRule.parse(new InputStreamReader(new FileInputStream(args[1]), StandardCharsets.UTF_8));
+            simpleRules.parse(new InputStreamReader(new FileInputStream(args[1]), StandardCharsets.UTF_8));
         } else {
             //all classes
-            simpleRule.parse(new StringReader("class *"));
+            simpleRules.parse(new StringReader("class *"));
         }
 
         if (args.length > 2) {
             final MappingReader mappingReader = new MappingReader(new File(args[2]));
-            filterConfig = new ProguardMappingConfig(filterConfig, mappingReader, simpleRule);
+            filterConfig = new ProguardMappingConfig(filterConfig, mappingReader, simpleRules);
         } else {
-            filterConfig = new SimpleConvertConfig(new BasicKeepConfig(), simpleRule);
+            filterConfig = new SimpleConvertConfig(new BasicKeepConfig(), simpleRules);
         }
 
 

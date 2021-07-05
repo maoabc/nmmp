@@ -5,11 +5,11 @@ import org.jf.dexlib2.iface.Method;
 
 public class SimpleConvertConfig implements ClassAndMethodFilter {
     private final ClassAndMethodFilter filter;
-    private final SimpleRule simpleRule;
+    private final SimpleRules simpleRule;
 
-    public SimpleConvertConfig(ClassAndMethodFilter filter, SimpleRule simpleRule) {
+    public SimpleConvertConfig(ClassAndMethodFilter filter, SimpleRules simpleRules) {
         this.filter = filter;
-        this.simpleRule = simpleRule;
+        this.simpleRule = simpleRules;
     }
 
     @Override

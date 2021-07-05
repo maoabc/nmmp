@@ -9,17 +9,18 @@
 
 当前只支持linux环境，先安装好JDK及android sdk和ndk。
 
-下载[nmm-protect.jar](https://github.com/maoabc/nmmp/releases/download/1.1/nmm-protect-1.1-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
+下载[nmm-protect-1.2.jar](https://github.com/maoabc/nmmp/releases/download/1.2/nmm-protect-1.2-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
 export CMAKE_PATH=/opt/android-sdk/cmake/3.18.1/   #可选，不配置的话直接使用/bin/cmake
-```
+```  
 然后运行jar：
 ``` bash
 java -jar nmm-protect-xxx.jar input.apk
 ```
-执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等
+执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等。  
+第一次运行后会在jar位置生成tools目录，里面有config.json可以编辑它配置安卓sdk，ndk相关路径。
 
 生成的apk需要使用zipalign对齐及apksigner签名才能安装使用
 ``` bash
@@ -28,15 +29,35 @@ apksigner sign --ks ~/.myapp.jks build/input-protect-align.apk
 ```
 + 下载及编译项目
 ``` bash
-git clone git@github.com:maoabc/nmmp.git
+git clone https://github.com/maoabc/nmmp.git
 cd nmmp/nmm-protect
 ./gradlew arsc:build
 ./gradlew build
 ```
 成功后会在build/libs生成可直接执行的fatjar。
-+ 需要保护的类及规则处理
++ 需要转换的类和方法规则
 
-这个目前没在简单测试的jar上实现，需要自己改源码实现，内部有对应接口。
+无转换规则文件，则会转换dex里所有class里的方法（除了构造方法和静态初始化方法）。规则只支持一些简单的情况：
+``` java
+//支持的规则比较简单，*只是被转成正则表达式的.*，支持一些简单的继承关系
+class * extends android.app.Activity
+class * implements java.io.Serializable
+class my.package.AClass
+class my.package.* { *; }
+class * extends java.util.ArrayList {
+  if*;
+}
+
+
+class A {
+}
+class B extends A {
+}
+class C extends B {
+}
+//比如'class * extends A' 只会匹配B而不会再匹配C
+```
+
 
 # nmmvm
 nmmvm是dex虚拟机具体实现，入口就一个函数:

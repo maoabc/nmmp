@@ -27,13 +27,13 @@ public class ProguardMappingConfig implements ClassAndMethodFilter, MappingProce
     private final Map<String, String> oldTypeNewTypeMap = Maps.newHashMap();
     private final Set<MethodMapping> methodSet = Sets.newHashSet();
     private final HashMultimap<MethodReference, MethodReference> newMethodRefMap = HashMultimap.create();
-    private final SimpleRule simpleRule;
+    private final SimpleRules simpleRules;
 
     public ProguardMappingConfig(ClassAndMethodFilter filter,
                                  MappingReader mappingReader,
-                                 SimpleRule simpleRule) throws IOException {
+                                 SimpleRules simpleRules) throws IOException {
         this.filter = filter;
-        this.simpleRule = simpleRule;
+        this.simpleRules = simpleRules;
         mappingReader.parse(this);
 
         for (MethodMapping methodMapping : methodSet) {
@@ -82,7 +82,7 @@ public class ProguardMappingConfig implements ClassAndMethodFilter, MappingProce
             ifacs.add(getOriginClassType(ifac));
         }
 
-        return simpleRule != null && simpleRule.matchClass(
+        return simpleRules != null && simpleRules.matchClass(
                 oldType,
                 getOriginClassType(classDef.getSuperclass()),
                 ifacs);
@@ -113,7 +113,7 @@ public class ProguardMappingConfig implements ClassAndMethodFilter, MappingProce
 
             for (MethodReference reference : oldMethodRefSet) {
                 if (oldType.equals(reference.getDefiningClass())) {
-                    if (simpleRule != null && simpleRule.matchMethod(reference.getName())) {
+                    if (simpleRules != null && simpleRules.matchMethod(reference.getName())) {
                         return true;
                     }
                 }
@@ -121,7 +121,7 @@ public class ProguardMappingConfig implements ClassAndMethodFilter, MappingProce
 
         }
 
-        return simpleRule != null && simpleRule.matchMethod(method.getName());
+        return simpleRules != null && simpleRules.matchMethod(method.getName());
     }
 
     private static String classNameToType(String className) {

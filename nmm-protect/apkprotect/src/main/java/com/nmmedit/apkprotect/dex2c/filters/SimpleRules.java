@@ -28,11 +28,11 @@ import java.util.Set;
  * }
  * The rule 'class * extends A' only match B
  */
-public class SimpleRule {
+public class SimpleRules {
     private final HashMultimap<ClassRule, MethodRule> convertRules = HashMultimap.create();
 
 
-    public SimpleRule() {
+    public SimpleRules() {
     }
 
     public void parse(Reader ruleReader) throws IOException {

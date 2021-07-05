@@ -10,12 +10,12 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class SimpleRuleTest extends TestCase {
+public class SimpleRulesTest extends TestCase {
 
     public void testParse() throws IOException {
-        final SimpleRule ruleReader = new SimpleRule();
+        final SimpleRules ruleReader = new SimpleRules();
         final DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
-                new BufferedInputStream(SimpleRuleTest.class.getResourceAsStream("/classes2.dex")));
+                new BufferedInputStream(SimpleRulesTest.class.getResourceAsStream("/classes2.dex")));
         ruleReader.parse(new StringReader(
                 "class * extends android.app.Activity\n" +
                         "class * implements java.io.Serializable\n" +
