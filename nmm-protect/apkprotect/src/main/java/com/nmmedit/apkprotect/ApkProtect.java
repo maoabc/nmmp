@@ -21,7 +21,6 @@ import org.jf.dexlib2.writer.pool.DexPool;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,14 +94,12 @@ public class ApkProtect {
             //static {
             //    NativeUtils.initClass(0);
             //}
-            final List<File> outDexFiles = injectInstructionAndWriteToFile(
+
+            final ArrayList<File> outDexFiles = injectInstructionAndWriteToFile(
                     globalConfig,
                     mainDexClassTypeSet,
                     60000,
                     apkFolders.getTempDexDir());
-
-            //主dex里处理so加载问题
-            File mainDex = outDexFiles.get(0);
 
             //Application对应的
             final String appName;
@@ -118,7 +115,7 @@ public class ApkProtect {
             final File newManifestFile = handleApplicationClass(
                     manifestBytes,
                     appName,
-                    mainDex,
+                    outDexFiles,
                     globalConfig,
                     apkFolders.getOutRootDir());
 
@@ -404,13 +401,13 @@ public class ApkProtect {
      * @return
      * @throws IOException
      */
-    private static List<File> injectInstructionAndWriteToFile(GlobalDexConfig globalConfig,
-                                                              Set<String> mainClassSet,
-                                                              int maxPoolSize,
-                                                              File dexOutDir
+    private static ArrayList<File> injectInstructionAndWriteToFile(GlobalDexConfig globalConfig,
+                                                                   Set<String> mainClassSet,
+                                                                   int maxPoolSize,
+                                                                   File dexOutDir
     ) throws IOException {
 
-        final List<File> dexFiles = new ArrayList<>();
+        final ArrayList<File> dexFiles = new ArrayList<>();
 
         DexPool lastDexPool = new DexPool(Opcodes.getDefault());
 
@@ -466,14 +463,14 @@ public class ApkProtect {
     /**
      * @param manifestBytes        二进制androidManifest.xml文件内容
      * @param applicationClassName application对应的class全限定名
-     * @param mainDex              主dex文件
+     * @param dexList              dex列表，索引0为主dex,索引0位置会被修改
      * @param outDir               处理后输出androidManifest.xml的目录
      * @return 返回新二进制xml文件
      * @throws IOException
      */
     private static File handleApplicationClass(byte[] manifestBytes,
                                                String applicationClassName,
-                                               File mainDex,
+                                               ArrayList<File> dexList,
                                                GlobalDexConfig globalConfig,
                                                File outDir) throws IOException {
         String newAppClassName;
@@ -492,13 +489,13 @@ public class ApkProtect {
 
         //添加android.app.Application的子类
 
-        //在windows下好像会出问题,可能文件流没关闭，导致没法删除文件
-//        DexFile mainDexFile = DexBackedDexFile.fromInputStream(
-//                Opcodes.getDefault(),
-//                new BufferedInputStream(new FileInputStream(mainDex)));
-        DexFile mainDexFile = new DexBackedDexFile(
+        //主dex里处理so加载问题
+        File mainDex = dexList.get(0);
+
+        DexFile mainDexFile = DexBackedDexFile.fromInputStream(
                 Opcodes.getDefault(),
-                Files.readAllBytes(mainDex.toPath()));
+                new BufferedInputStream(new FileInputStream(mainDex)));
+
         DexPool newDex = new DexPool(Opcodes.getDefault());
 
         Dex2c.addApplicationClass(
@@ -516,19 +513,16 @@ public class ApkProtect {
                 new RegisterNativesUtilClassDef("L" + globalConfig.getConfigs().get(0).getRegisterNativesClassName() + ";",
                         nativeMethodNames));
 
-        final File newFile = new File(mainDex.getParent(), "temp.dex");
+        //不知道为什么windows下删除mainDex会报错，所以改为不删除mainDex，而是把新的dex写入新文件，之后再替换原本mainDex文件
+        //处理后的dex写入新的文件中，同时替换主dex，dexList索引0为主dex
+
+        final File injectLoadLib = new File(mainDex.getParent(), "injectLoadLib");
+        if (!injectLoadLib.exists()) injectLoadLib.mkdirs();
+
+        final File newFile = new File(injectLoadLib, mainDex.getName());
         newDex.writeTo(new FileDataStore(newFile));
-
-         mainDex.delete();
-
-        if (!newFile.renameTo(mainDex)) {
-            throw new RuntimeException("Can't handle main dex " + mainDex);
-        }
-
-        if (!mainDex.exists()) {
-            throw new RuntimeException("No main dex: " + mainDex);
-        }
-
+        //替换原本的mainDex文件
+        dexList.set(0, newFile);
 
         //写入新manifest文件
         File newManifestFile = new File(outDir, ANDROID_MANIFEST_XML);
