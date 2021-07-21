@@ -21,6 +21,7 @@ import org.jf.dexlib2.writer.pool.DexPool;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -491,9 +492,13 @@ public class ApkProtect {
 
         //添加android.app.Application的子类
 
-        DexFile mainDexFile = DexBackedDexFile.fromInputStream(
+        //在windows下好像会出问题,可能文件流没关闭，导致没法删除文件
+//        DexFile mainDexFile = DexBackedDexFile.fromInputStream(
+//                Opcodes.getDefault(),
+//                new BufferedInputStream(new FileInputStream(mainDex)));
+        DexFile mainDexFile = new DexBackedDexFile(
                 Opcodes.getDefault(),
-                new BufferedInputStream(new FileInputStream(mainDex)));
+                Files.readAllBytes(mainDex.toPath()));
         DexPool newDex = new DexPool(Opcodes.getDefault());
 
         Dex2c.addApplicationClass(
@@ -511,10 +516,11 @@ public class ApkProtect {
                 new RegisterNativesUtilClassDef("L" + globalConfig.getConfigs().get(0).getRegisterNativesClassName() + ";",
                         nativeMethodNames));
 
-        final File newFile = new File(mainDex.getParent(), ".temp.dex");
+        final File newFile = new File(mainDex.getParent(), "temp.dex");
         newDex.writeTo(new FileDataStore(newFile));
 
-        mainDex.delete();
+         mainDex.delete();
+
         if (!newFile.renameTo(mainDex)) {
             throw new RuntimeException("Can't handle main dex " + mainDex);
         }
