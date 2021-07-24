@@ -534,14 +534,14 @@ public class ApkProtect {
         return newManifestFile;
     }
 
-    //只解压不需要处理的文件,同时计算crc32
-    private static HashMap<ZipEntry, FileObj> zipExtractNeedCopy(ZipInputStream zipInputStream, File outDir) throws IOException {
+    //只解压不需要处理的文件
+    private static HashMap<ZipEntry, File> zipExtractNeedCopy(ZipInputStream zipInputStream, File outDir) throws IOException {
         //除去一些需要修改的文件
         final Pattern regex = Pattern.compile(
                 "classes(\\d)*\\.dex" +
                         "|META-INF/.*\\.(RSA|DSA|EC|SF|MF)" +
                         "|AndroidManifest\\.xml");
-        final HashMap<ZipEntry, FileObj> entryNameFileMap = new HashMap<>();
+        final HashMap<ZipEntry, File> entryNameFileMap = new HashMap<>();
         ZipEntry entry;
         while ((entry = zipInputStream.getNextEntry()) != null) {
             if (entry.isDirectory()
@@ -557,8 +557,8 @@ public class ApkProtect {
                 file.getParentFile().mkdirs();
             }
             try (final FileOutputStream out = new FileOutputStream(file)) {
-                final long crc = copyStreamCalcCrc32(zipInputStream, out);
-                entryNameFileMap.put(entry, new FileObj(file, crc));
+                FileUtils.copyStream(zipInputStream, out);
+                entryNameFileMap.put(entry, file);
             }
         }
 
@@ -568,26 +568,39 @@ public class ApkProtect {
     private static void zipCopy(ZipInputStream zipInputStream, File tempDir, ZipOutputStream zipOutputStream) throws IOException {
 
         //解压需要从旧zip复制到新zip的文件
-        final HashMap<ZipEntry, FileObj> entries = zipExtractNeedCopy(zipInputStream, tempDir);
-        for (Map.Entry<ZipEntry, FileObj> entryFile : entries.entrySet()) {
+        final HashMap<ZipEntry, File> entries = zipExtractNeedCopy(zipInputStream, tempDir);
+        for (Map.Entry<ZipEntry, File> entryFile : entries.entrySet()) {
             final ZipEntry entry = entryFile.getKey();
-            final FileObj fileObj = entryFile.getValue();
+            final File file = entryFile.getValue();
 
 
             final ZipEntry zipEntry = new ZipEntry(entry.getName());
             if (entry.getMethod() == ZipEntry.STORED) {//不压缩只储存数据
+                final long length = file.length();
                 zipEntry.setMethod(ZipEntry.STORED);
-                zipEntry.setCrc(fileObj.crc32);
-                zipEntry.setSize(fileObj.file.length());
-                zipEntry.setCompressedSize(fileObj.file.length());
+                zipEntry.setCrc(calcCrc32(file));
+                zipEntry.setSize(length);
+                zipEntry.setCompressedSize(length);
             }
 
             zipOutputStream.putNextEntry(zipEntry);
 
-            try (final FileInputStream fileIn = new FileInputStream(fileObj.file)) {
+            try (final FileInputStream fileIn = new FileInputStream(file)) {
                 FileUtils.copyStream(fileIn, zipOutputStream);
             }
             zipOutputStream.closeEntry();
+        }
+    }
+
+    private static long calcCrc32(File file) throws IOException {
+        try (InputStream inputStream = new FileInputStream(file)) {
+            final byte[] buf = new byte[1024 * 4];
+            final CRC32 crc32 = new CRC32();
+            int len;
+            while ((len = inputStream.read(buf, 0, buf.length)) != -1) {
+                crc32.update(buf, 0, len);
+            }
+            return crc32.getValue();
         }
     }
 
@@ -611,27 +624,6 @@ public class ApkProtect {
         return "L" + classDotName.replace('.', '/') + ";";
     }
 
-    private static long copyStreamCalcCrc32(InputStream in, OutputStream out) throws IOException {
-        final CRC32 crc32 = new CRC32();
-        byte[] buf = new byte[4 * 1024];
-        int len;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
-            crc32.update(buf, 0, len);
-        }
-        return crc32.getValue();
-    }
-
-
-    private static class FileObj {
-        private final File file;
-        private final long crc32;
-
-        FileObj(File file, long crc32) {
-            this.file = file;
-            this.crc32 = crc32;
-        }
-    }
 
     public static class Builder {
         private final ApkFolders apkFolders;
