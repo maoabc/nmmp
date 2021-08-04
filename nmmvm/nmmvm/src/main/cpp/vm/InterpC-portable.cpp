@@ -1531,8 +1531,10 @@ jvalue vmInterpret(
         vsrc1 = INST_B(inst);
         arrayObj = (jarray) GET_REGISTER_AS_OBJECT(vsrc1);
         ILOGV("|array-length v%d,v%d  (%p)", vdst, vsrc1, arrayObj);
-        if (arrayObj == NULL)
+        if (arrayObj == NULL) {
+            dvmThrowNullPointerException(env, NULL);
             GOTO_exceptionThrown();
+        }
 
         arrayLength = env->GetArrayLength(arrayObj);
         SET_REGISTER(vdst, arrayLength);
