@@ -258,7 +258,17 @@ public class VmTest extends ArrayList {
         // 而是通过调用constString得到字符串,这样可以保证S和"string"是同一对象
         return S == "string";
     }
+
     public native static boolean constString0();
+
+
+    //验证jni从java层加载字符串常量可以保证字符串对象一致
+
+    public static String myConst(int idx) {
+        return "string";
+    }
+
+    public native static boolean constString1();
 }
 
 

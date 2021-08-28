@@ -252,8 +252,6 @@ public class VmUnitTest {
     public native static void passClass0(Class<?> clazz);
 
 
-
-
     @Test
     public void testStaticField() {
         System.loadLibrary("nmmp");
@@ -264,7 +262,6 @@ public class VmUnitTest {
         final Object obj = FieldTest.getObj();
         assert obj != obj0;
     }
-
 
 
     @Test
@@ -285,7 +282,13 @@ public class VmUnitTest {
         System.out.println(b);
         final boolean b1 = VmTest.constString0();
         System.out.println(b1);
-        assert b!=b1;
+        assert b != b1;
+        // 新的const-string实现
+        final boolean b2 = VmTest.constString1();
+        System.out.println(b2);
+
+        assert b == b2;
 
     }
 }
+
