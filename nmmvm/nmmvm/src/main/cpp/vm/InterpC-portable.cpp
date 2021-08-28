@@ -1645,6 +1645,7 @@ jvalue vmInterpret(
         if (obj == NULL) {
             /* will throw a null pointer exception */
             LOGVV("Bad exception");
+            dvmThrowNullPointerException(env, NULL);
         } else {
             /* use the requested exception */
             env->Throw(obj);

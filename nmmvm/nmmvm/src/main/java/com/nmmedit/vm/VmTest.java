@@ -226,4 +226,16 @@ public class VmTest extends ArrayList {
     public static native void byteBuffer0(ByteBuffer buffer);
 
 
+
+
+
+    //java执行,正常情况下抛空指针异常
+    public static void throwNull() throws IOException {
+        IOException e = null;
+        throw e;
+    }
+
+    //测试当异常为null时throw指令是否正常抛异常
+    public native static void throwNull0() throws IOException;
+
 }

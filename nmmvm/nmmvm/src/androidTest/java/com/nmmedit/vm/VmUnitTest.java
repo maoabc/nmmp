@@ -42,7 +42,7 @@ public class VmUnitTest {
         assertEquals("com.nmmedit.vm.test", appContext.getPackageName());
     }
 
-//    @Before
+    @Before
     public void before() {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         publicSourceDir = appContext.getPackageCodePath();
@@ -51,6 +51,7 @@ public class VmUnitTest {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry zipEntry = entries.nextElement();
+                //需要查找VmTest这个类在debug版本apk哪个dex里,测试版apk在build/outputs/apk/androidTest/debug目录下
                 if (zipEntry.getName().equals("classes2.dex")) {
                     InputStream stream = zipFile.getInputStream(zipEntry);
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -262,5 +263,19 @@ public class VmUnitTest {
         final Object obj0 = FieldTest.getObj0();
         final Object obj = FieldTest.getObj();
         assert obj != obj0;
+    }
+
+
+
+    @Test
+    public void testThrow() throws IOException {
+        try {
+            VmTest.throwNull();
+        } catch (NullPointerException e) {
+
+        }
+
+        VmTest.throwNull0();
+
     }
 }
