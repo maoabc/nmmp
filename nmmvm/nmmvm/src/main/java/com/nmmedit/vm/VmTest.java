@@ -22,6 +22,7 @@ public class VmTest extends ArrayList {
 
     public static native void loadDex0(byte[] dex);
 
+    //整数运算
     public static int iadd(int a, int b) {
         return a + b;
     }
@@ -29,6 +30,7 @@ public class VmTest extends ArrayList {
     public static native int iadd0(int a, int b);
 
 
+    //长整数及方法调用
     public static long ladd(long a, long b) {
         long max = Math.max(a, b);
         return a + b - 6;
@@ -37,6 +39,7 @@ public class VmTest extends ArrayList {
     public static native long ladd0(long a, long b);
 
 
+    //跳转指令,判断指令是否正常
     public static int loop(int count) {
         int sum = 0;
         for (int i = 0; i < count; i++) {
@@ -49,6 +52,7 @@ public class VmTest extends ArrayList {
 
     public static int f = 3;
 
+    //静态域测试
     public static int sfieldGet() {
         return f;
     }
@@ -63,6 +67,7 @@ public class VmTest extends ArrayList {
 
     public int v = 3;
 
+    //实例域相关测试
     public int ifieldGet() {
         return v;
     }
@@ -83,6 +88,8 @@ public class VmTest extends ArrayList {
         return id;
     }
 
+
+    //两条switch指令,只测试一条,另外的没测试,实际也是正确的
 
     public static int packedSwitch(int key) {
         switch (key) {
@@ -106,12 +113,14 @@ public class VmTest extends ArrayList {
 
     public static native int packedSwitch0(int key);
 
+    //测试取得数组元素
     public static int aget(int[] arr, int idx) {
         return arr[idx];
     }
 
     public static native int aget0(int[] arr, int idx);
 
+    //测试设置数组元素
     public static String aput(String[] arr, int idx, String val) {
         arr[idx] = val;
         return val;
@@ -130,6 +139,7 @@ public class VmTest extends ArrayList {
 
     public static native String filledNewArray0(int idx);
 
+    //测试异常处理是否正常
     public void tryCatch() throws IOException {
         synchronized (this) {
             try {
@@ -198,6 +208,7 @@ public class VmTest extends ArrayList {
         Three
     }
 
+    //测试if-eq,if-ne指令,比较对象
     public static Day getDay() {
         return Day.One;
     }
@@ -206,6 +217,7 @@ public class VmTest extends ArrayList {
 
     private LongSparseArray<Bitmap> bitmapSurface = new LongSparseArray<>(5);
 
+    //测试参数传递问题,有long/double时是否能正确传递
     public Canvas initBitmap(long nativeSurface, int width, int height) {
 //        Log.d(TAG, "initBitmap: " + nativeSurface);
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -229,7 +241,7 @@ public class VmTest extends ArrayList {
 
 
 
-    //java执行,正常情况下抛空指针异常
+    //java执行会抛空指针异常
     public static void throwNull() throws IOException {
         IOException e = null;
         throw e;
