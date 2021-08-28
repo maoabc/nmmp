@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 
-
 public class VmTest extends ArrayList {
     static {
         System.loadLibrary("nmmp");
@@ -238,9 +237,6 @@ public class VmTest extends ArrayList {
     public static native void byteBuffer0(ByteBuffer buffer);
 
 
-
-
-
     //java执行会抛空指针异常
     public static void throwNull() throws IOException {
         IOException e = null;
@@ -250,4 +246,19 @@ public class VmTest extends ArrayList {
     //测试当异常为null时throw指令是否正常抛异常
     public native static void throwNull0() throws IOException;
 
+    //todo const-string指令相关问题,
+
+    public static String S = "string";
+
+    //这个方法被native化,通过vm执行
+    public static boolean constString() {
+        // java执行的话为true,但是通过vm执行这个只能是false
+        // 如果要和java保持一致的话,比如可以在处理dex生成一个Constants的类包含String constString(int idx)方法,
+        // 里面一个字符串数组,包含所有const-string*需要的字符串,jni不再通过NewStringUTF创建字符串,
+        // 而是通过调用constString得到字符串,这样可以保证S和"string"是同一对象
+        return S == "string";
+    }
+    public native static boolean constString0();
 }
+
+

@@ -895,6 +895,32 @@ JNIEXPORT void Java_com_nmmedit_vm_VmTest_throwNull0
     jvalue value = vmInterpret(env, &code, &dvmResolver);
 
 }
+JNIEXPORT jboolean Java_com_nmmedit_vm_VmTest_constString0
+        (JNIEnv *env, jclass clazz) {
+
+    const DexCode *dexCode = findDexCode("Lcom/nmmedit/vm/VmTest;", "constString");
+    if (dexCode == NULL) {
+        return JNI_FALSE;
+    }
+
+    u2 registersSize = dexCode->registersSize;
+
+    regptr_t *regs = (regptr_t *) calloc(registersSize, sizeof(regptr_t));
+    u1 *reg_flags = (u1 *) calloc(registersSize, sizeof(u1));
+
+    const u2 *insns = dexCode->insns;
+    u4 insnsSize = dexCode->insnsSize;
+    const vmCode code = {
+            .insns=insns,
+            .insnsSize=insnsSize,
+            .regs=regs,
+            .reg_flags=reg_flags,
+            .triesHandlers=NULL
+    };
+    jvalue value = vmInterpret(env, &code, &dvmResolver);
+
+    return value.z;
+}
 
 
 

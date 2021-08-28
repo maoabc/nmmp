@@ -278,4 +278,14 @@ public class VmUnitTest {
         VmTest.throwNull0();
 
     }
+
+    @Test
+    public void testConstString() throws IOException {
+        final boolean b = VmTest.constString();
+        System.out.println(b);
+        final boolean b1 = VmTest.constString0();
+        System.out.println(b1);
+        assert b!=b1;
+
+    }
 }
