@@ -23,7 +23,10 @@ import java.util.*;
  */
 
 public class JniCodeGenerator {
-    private final boolean isRegisterNative;
+    // 不能再设为false,不然无法正确加载本地库,而且按标准的jni函数名可能会有命名冲突问题
+    // 所以只保留注册本地函数这种方式
+    // todo 再改改jni函数名生成方式应该可以把bridge这类方法也native化
+    private final boolean isRegisterNative = true;
 
     private final HashMultimap<String, MyMethod> handledNativeMethods = HashMultimap.create();
 
@@ -44,7 +47,6 @@ public class JniCodeGenerator {
 
         instructionRewriter.loadReferences(resolverCodeGenerator.getReferences(), analyzer);
 
-        this.isRegisterNative = true;
     }
 
     public void addMethod(Method method, Writer writer) throws IOException {
