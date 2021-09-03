@@ -2,16 +2,11 @@ package com.nmmedit.apkprotect.dex2c.converter.structs;
 
 import com.google.common.collect.Iterables;
 import org.jf.dexlib2.AccessFlags;
-import org.jf.dexlib2.HiddenApiRestriction;
-import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.base.reference.BaseMethodReference;
-import org.jf.dexlib2.base.reference.BaseStringReference;
 import org.jf.dexlib2.base.reference.BaseTypeReference;
-import org.jf.dexlib2.builder.MutableMethodImplementation;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
-import org.jf.dexlib2.iface.*;
+import org.jf.dexlib2.iface.Annotation;
+import org.jf.dexlib2.iface.ClassDef;
+import org.jf.dexlib2.iface.Field;
+import org.jf.dexlib2.iface.Method;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +22,12 @@ import java.util.*;
  * 如果原来自定义了Application,则该类成为原来Application的父类,原来Application的父类成为该类的父类：
  * BaseApp <-- android.app.Application 变为 BaseApp <-- MyApplication <-- android.app.Application
  * 如果原来没自定义Application,则需要修改AndroidManifest.xml把该类设置为当前应用的Application
+ * <p>
+ * <p>
+ * 没必要在application处理本地库加载,直接在NativeUtil里就可以
  */
+
+@Deprecated
 public class LoadLibClassDef extends BaseTypeReference implements ClassDef {
     private ClassDef baseAppClassDef;
     @Nonnull
@@ -149,128 +149,5 @@ public class LoadLibClassDef extends BaseTypeReference implements ClassDef {
         return Iterables.concat(getDirectMethods(), getVirtualMethods());
     }
 
-    private static class LoadLibStaticBlockMethod extends BaseMethodReference implements Method {
-
-        private final Method method;
-
-        @Nonnull
-        private final String definingClass;
-
-        @Nonnull
-        private final String libName;
-
-
-        public LoadLibStaticBlockMethod(@Nullable Method method, @Nonnull String definingClass, @Nonnull String libName) {
-            this.method = method;
-            this.definingClass = definingClass;
-            this.libName = libName;
-        }
-
-        @Nonnull
-        @Override
-        public String getDefiningClass() {
-            return definingClass;
-        }
-
-        @Nonnull
-        @Override
-        public String getName() {
-            return "<clinit>";
-        }
-
-        @Nonnull
-        @Override
-        public List<? extends CharSequence> getParameterTypes() {
-            return Collections.emptyList();
-        }
-
-        @Nonnull
-        @Override
-        public List<? extends MethodParameter> getParameters() {
-            return Collections.emptyList();
-        }
-
-        @Nonnull
-        @Override
-        public String getReturnType() {
-            return "V";
-        }
-
-
-        @Override
-        public int getAccessFlags() {
-            return AccessFlags.CONSTRUCTOR.getValue()
-                    | AccessFlags.STATIC.getValue();
-        }
-
-        @Nonnull
-        @Override
-        public Set<? extends Annotation> getAnnotations() {
-            return Collections.emptySet();
-        }
-
-        @Nonnull
-        @Override
-        public Set<HiddenApiRestriction> getHiddenApiRestrictions() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        public MethodImplementation getImplementation() {
-            final MutableMethodImplementation implementation;
-            if (method != null && method.getImplementation() != null) {
-                implementation = new MutableMethodImplementation(method.getImplementation()) {
-                    @Override
-                    public int getRegisterCount() {//起码需要一个寄存器
-                        return Math.max(1, super.getRegisterCount());
-                    }
-                };
-                injectCallLoadLibInsns(implementation);
-            } else {//原来不存在,则需要添加返回指令
-                implementation = new MutableMethodImplementation(1);
-                injectCallLoadLibInsns(implementation);
-                implementation.addInstruction(new BuilderInstruction10x(Opcode.RETURN_VOID));
-            }
-            return implementation;
-        }
-
-        private void injectCallLoadLibInsns(MutableMethodImplementation implementation) {
-            implementation.addInstruction(0, new BuilderInstruction21c(Opcode.CONST_STRING, 0, new BaseStringReference() {
-                @Nonnull
-                @Override
-                public String getString() {
-                    return libName;
-                }
-            }));
-            implementation.addInstruction(1, new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1,
-                    0, 0, 0, 0, 0,
-                    new BaseMethodReference() {
-                        @Nonnull
-                        @Override
-                        public String getDefiningClass() {
-                            return "Ljava/lang/System;";
-                        }
-
-                        @Nonnull
-                        @Override
-                        public String getName() {
-                            return "loadLibrary";
-                        }
-
-                        @Nonnull
-                        @Override
-                        public List<? extends CharSequence> getParameterTypes() {
-                            return Collections.singletonList("Ljava/lang/String;");
-                        }
-
-                        @Nonnull
-                        @Override
-                        public String getReturnType() {
-                            return "V";
-                        }
-                    }
-            ));
-        }
-    }
 
 }

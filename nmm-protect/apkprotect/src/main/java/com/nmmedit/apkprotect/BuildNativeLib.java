@@ -8,6 +8,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BuildNativeLib {
+    //库名称
+    public static final String NMMP_NAME = "nmmp";
+
+    //
+    //虚拟机库名称,如果cmake里配置为静态库,这个可以忽略
+    public static final String VM_NAME = "nmmvm";
+
 
     //编译出native lib，同时返回最后的so文件
     public static List<File> build(@NotNull CMakeOptions options) throws IOException {
@@ -187,19 +194,23 @@ public class BuildNativeLib {
         //最后输出的so文件
         public List<File> getSharedObjectFile() {
             //linux,etc.
-            File vmSo = new File(getLibOutputDir(), "libnmmvm.so");
-            File mpSo = new File(getLibOutputDir(), "libnmmp.so");
+            final String vmLibName = "lib" + VM_NAME + ".so";
+
+            final String nmmpLibName = "lib" + NMMP_NAME + ".so";
+
+            File vmSo = new File(getLibOutputDir(), vmLibName);
+            File mpSo = new File(getLibOutputDir(), nmmpLibName);
 
             if (!vmSo.exists()) {
                 //windows
-                vmSo = new File(getBuildPath(), "vm/libnmmvm.so");
+                vmSo = new File(getBuildPath(), "vm/" + vmLibName);
             }
             if (!vmSo.exists()) {
                 throw new RuntimeException("Not Found so: " + vmSo.getAbsolutePath());
             }
 
             if (!mpSo.exists()) {
-                mpSo = new File(getBuildPath(), "libnmmp.so");
+                mpSo = new File(getBuildPath(), nmmpLibName);
             }
             if (!mpSo.exists()) {
                 throw new RuntimeException("Not Found so: " + mpSo.getAbsolutePath());

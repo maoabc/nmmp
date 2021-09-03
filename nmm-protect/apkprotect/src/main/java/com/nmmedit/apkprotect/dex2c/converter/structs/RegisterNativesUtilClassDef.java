@@ -16,15 +16,23 @@ import java.util.Set;
 /**
  * 每个类调用的静态初始化方法,一般情况一个classes.dex对应一个注册方法
  * 需要把它放在主classes.dex里
+ *
+ * 静态初始化方法里增加加载本地库代码
  */
 public class RegisterNativesUtilClassDef extends BaseTypeReference implements ClassDef {
     @Nonnull
     private final String type;
+    @Nonnull
     private final List<String> nativeMethodNames;
 
-    public RegisterNativesUtilClassDef(@Nonnull String type, List<String> nativeMethodNames) {
+    private final String libName;
+
+    public RegisterNativesUtilClassDef(@Nonnull String type,
+                                       @Nonnull List<String> nativeMethodNames,
+                                       @Nonnull String libName) {
         this.type = type;
         this.nativeMethodNames = nativeMethodNames;
+        this.libName = libName;
     }
 
     @Nonnull
@@ -85,7 +93,10 @@ public class RegisterNativesUtilClassDef extends BaseTypeReference implements Cl
     @Override
     public Iterable<? extends Method> getDirectMethods() {
         final ArrayList<Method> methods = new ArrayList<>();
-        methods.add(new EmptyConstructorMethod(type,"Ljava/lang/Object;"));
+        //静态初始化方法
+        methods.add(new LoadLibStaticBlockMethod(null, type, libName));
+        //空构造函数
+        methods.add(new EmptyConstructorMethod(type, "Ljava/lang/Object;"));
         for (String methodName : nativeMethodNames) {
             methods.add(new NativeMethod(type, methodName));
         }
@@ -104,7 +115,6 @@ public class RegisterNativesUtilClassDef extends BaseTypeReference implements Cl
         //virtualMethods为空,总方法只需要返回directMethods就行
         return getDirectMethods();
     }
-
 
 
     private static class NativeMethod extends BaseMethodReference implements Method {

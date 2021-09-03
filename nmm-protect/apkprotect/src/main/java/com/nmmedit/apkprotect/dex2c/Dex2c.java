@@ -1,25 +1,21 @@
 package com.nmmedit.apkprotect.dex2c;
 
-import com.google.common.collect.Maps;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.converter.structs.ClassMethodToNative;
 import com.nmmedit.apkprotect.dex2c.converter.structs.ClassToSymDex;
-import com.nmmedit.apkprotect.dex2c.converter.structs.LoadLibClassDef;
 import com.nmmedit.apkprotect.dex2c.converter.structs.RegisterNativesCallerClassDef;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class Dex2c {
@@ -188,7 +184,7 @@ public class Dex2c {
         return dexPools;
     }
 
-    public static void internClass(DexConfig config, DexPool dexPool, ClassDef classDef) {
+    private static void internClass(DexConfig config, DexPool dexPool, ClassDef classDef) {
         final Set<String> classes = config.getHandledNativeClasses();
         final String type = classDef.getType();
         final String className = type.substring(1, type.length() - 1);
@@ -204,59 +200,4 @@ public class Dex2c {
         }
     }
 
-    /**
-     * 在自定义application的类继承关系上增加一个新类用于加载so库
-     *
-     * @param dexFile
-     * @param newType
-     */
-    public static void addApplicationClass(DexFile dexFile,
-                                           DexPool newDex,
-                                           final String newType) {
-
-        ClassDef appDirectSubClassDef = null;
-        List<ClassDef> parents = getClassDefParents(dexFile.getClasses(), newType, LANDROID_APP_APPLICATION);
-        if (!parents.isEmpty()) {
-            appDirectSubClassDef = parents.get(parents.size() - 1);
-        }
-
-        for (ClassDef classDef : dexFile.getClasses()) {
-            if (classDef.equals(appDirectSubClassDef)) {
-                continue;
-            }
-            newDex.internClass(classDef);
-        }
-
-        final LoadLibClassDef libClassDef = new LoadLibClassDef(appDirectSubClassDef,
-                appDirectSubClassDef != null ? appDirectSubClassDef.getType() : newType, "nmmp");
-        newDex.internClass(libClassDef);
-
-    }
-
-    //查找某个类所有父类
-    private static List<ClassDef> getClassDefParents(final Set<? extends ClassDef> classes, String type, String rootType) {
-        String tmpType = type;
-        final ArrayList<ClassDef> parents = new ArrayList<>();
-
-        //创建类型名和classDef对应关系
-        final Map<String, ClassDef> classDefMap = Maps.newHashMap();
-        for (ClassDef classDef : classes) {
-            classDefMap.put(classDef.getType(), classDef);
-        }
-
-        while (true) {//一直查找父类直到是父类rootType返回对应的classDef
-            final ClassDef classDef = classDefMap.get(tmpType);
-            if (classDef == null) {
-                break;
-            }
-            //只处理rootType的直接子类
-            if (rootType.equals(classDef.getSuperclass())) {
-                parents.add(classDef);
-                break;
-            }
-            tmpType = classDef.getSuperclass();
-            parents.add(classDef);
-        }
-        return parents;
-    }
 }
