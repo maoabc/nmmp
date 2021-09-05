@@ -1,13 +1,13 @@
 # nmmp
 基于dex-vm运行dalvik字节码从而对dex进行保护，增加反编译难度。
-项目分为两部分nmm-protect是纯java项目，对dex进行转换，把dex里方法及各种数据转为c结构体，处理apk生成ndk项目然后编译生成so，输出处理后的apk。nmmvm是一个安卓项目，包含dex-vm实现及各种dalvik指令的测试等。
+项目分为两部分nmm-protect是纯java项目，对dex进行转换，把dex里数据转为c结构体，opcode随机化生成ndk项目,编译后生成加固后的apk。nmmvm是一个安卓项目，包含dex-vm实现及各种dalvik指令的测试等。
 # nmm-protect
 
 + 简单使用
 
 不编译nmm-protect，可以直接看使用它生成项目及最后的apk，[一个对apk处理的例子](https://github.com/maoabc/nmmp/releases/download/demo/demo.zip)。
 
-当前只支持linux环境，先安装好JDK及android sdk和ndk。
+例子在linux环境下测试的，windows也应该没问题,先安装好JDK及android sdk和ndk。
 
 下载[nmm-protect-1.2.jar](https://github.com/maoabc/nmmp/releases/download/1.2/nmm-protect-1.2-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
@@ -98,4 +98,4 @@ typedef struct {
 } vmResolver;
 
 ```
-vmCode提供执行所需要的指令、异常表及寄存器空间，vmResolver它包含一组函数指针，提供运行时的符号，比如field，method等。通过自定义这两个参数来实现不同的加固强度，比如项目里的test.cpp有一个简单的基于libdex实现的vmResolver，它主要用于开发测试。而nmm-protect实现的是把.dex相关数据转换为c结构体，还包含了opcode随机化等，基本可实际使用。
+vmCode提供执行所需要的指令、异常表及寄存器空间，vmResolver包含一组函数指针，提供运行时的符号，比如field，method等。通过自定义这两个参数来实现不同的加固方式，比如项目里的test.cpp有一个简单的基于libdex实现的vmResolver，它主要用于开发测试。而nmm-protect实现的是把.dex相关数据转换为c结构体，还包含了opcode随机化等，基本可实际使用。
