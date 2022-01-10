@@ -961,6 +961,22 @@ JNIEXPORT jboolean Java_com_nmmedit_vm_VmTest_constString1
     return value.z;
 }
 
+static jobject Java_com_nmmedit_vm_TestJniRegisterNatives_getRealOwner
+        (JNIEnv *env, jobject obj) {
+    return nullptr;
+}
+
+JNIEXPORT void Java_com_nmmedit_vm_TestJniRegisterNatives_initClass
+        (JNIEnv *env, jclass clazz) {
+    jclass cls = env->FindClass("com/nmmedit/vm/TestJniRegisterNatives");
+    JNINativeMethod methods = {
+            .fnPtr=(void *) (Java_com_nmmedit_vm_TestJniRegisterNatives_getRealOwner),
+            .name="getRealOwner",
+            .signature="()Ljava/lang/Object;"
+    };
+
+    env->RegisterNatives(cls, &methods, 1);
+}
 
 #ifdef __cplusplus
 }

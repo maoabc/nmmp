@@ -290,5 +290,12 @@ public class VmUnitTest {
         assert b == b2;
 
     }
+
+
+    @Test
+    public void testPrivateMethod(){
+        final TestJniRegisterNatives inflater = new TestJniRegisterNatives();
+        final Object realOwner = inflater.getRealOwner();
+    }
 }
 

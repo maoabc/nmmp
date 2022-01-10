@@ -23,7 +23,8 @@ public class BasicKeepConfig implements ClassAndMethodFilter {
     public boolean acceptMethod(Method method) {
 
         if (MyMethodUtil.isConstructorOrAbstract(method)
-                || MyMethodUtil.isBridgeOrSynthetic(method)) {
+                || MyMethodUtil.isBridgeOrSynthetic(method)
+        ) {
             return false;
         }
         return true;
