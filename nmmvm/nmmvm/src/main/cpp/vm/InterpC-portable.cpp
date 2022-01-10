@@ -1925,6 +1925,7 @@ HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", {
         ILOGV("|aget%s v%d,v%d,v%d", "-object", vdst, vsrc1, vsrc2);
         arrayObj = (jobjectArray) GET_REGISTER_AS_OBJECT(vsrc1);
         if (arrayObj == NULL) {
+            dvmThrowNullPointerException(env, NULL);
             GOTO_exceptionThrown();
         }
         u4 idx = GET_REGISTER(vsrc2);
