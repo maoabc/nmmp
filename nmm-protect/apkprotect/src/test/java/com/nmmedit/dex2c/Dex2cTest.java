@@ -1,10 +1,10 @@
 package com.nmmedit.dex2c;
 
 import com.nmmedit.apkprotect.dex2c.Dex2c;
+import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.MyMethodUtil;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.NoneInstructionRewriter;
-import com.nmmedit.apkprotect.dex2c.converter.structs.ClassMethodToNative;
 import com.nmmedit.apkprotect.dex2c.converter.testbuild.ClassMethodImplCollection;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import org.jf.dexlib2.AccessFlags;
@@ -16,6 +16,7 @@ import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,13 +30,17 @@ public class Dex2cTest {
 
     @Test
     public void testDexSplit() throws IOException {
-        InputStream resourceAsStream = this.getClass().getResourceAsStream("/classes2.dex");
-        File outdir = new File("/tmp","outdir");
+        File outdir = new File("/tmp", "outdir");
         if (!outdir.exists()) outdir.mkdirs();
         final InstructionRewriter instructionRewriter = new NoneInstructionRewriter();
-        Dex2c.handleDex(resourceAsStream,
+        final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
+        final DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(), new BufferedInputStream(this.getClass().getResourceAsStream("/classes2.dex")));
+        classAnalyzer.loadDexFile(dexFile);
+
+        Dex2c.handleDex(this.getClass().getResourceAsStream("/classes2.dex"),
                 "classes.dex",
                 testFilter,
+                classAnalyzer,
                 instructionRewriter,
                 outdir);
     }

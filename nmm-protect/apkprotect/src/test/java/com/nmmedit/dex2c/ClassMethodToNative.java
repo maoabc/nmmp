@@ -1,4 +1,4 @@
-package com.nmmedit.apkprotect.dex2c.converter.structs;
+package com.nmmedit.dex2c;
 
 
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;

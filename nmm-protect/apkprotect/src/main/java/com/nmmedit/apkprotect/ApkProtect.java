@@ -73,7 +73,7 @@ public class ApkProtect {
                 throw new RuntimeException("No classes.dex");
             }
             //globalConfig里面configs顺序和classesN.dex文件列表一样
-            final GlobalDexConfig globalConfig = Dex2c.handleDexes(files,
+            final GlobalDexConfig globalConfig = Dex2c.handleAllDex(files,
                     filter,
                     instructionRewriter,
                     apkFolders.getCodeGeneratedDir());

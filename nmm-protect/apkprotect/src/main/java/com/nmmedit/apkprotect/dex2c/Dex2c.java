@@ -3,16 +3,20 @@ package com.nmmedit.apkprotect.dex2c;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
-import com.nmmedit.apkprotect.dex2c.converter.structs.ClassMethodToNative;
-import com.nmmedit.apkprotect.dex2c.converter.structs.ClassToSymDex;
+import com.nmmedit.apkprotect.dex2c.converter.structs.MethodConverter;
+import com.nmmedit.apkprotect.dex2c.converter.structs.MyClassDef;
 import com.nmmedit.apkprotect.dex2c.converter.structs.RegisterNativesCallerClassDef;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
+import com.nmmedit.apkprotect.util.Pair;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
+import org.jf.dexlib2.iface.Method;
+import org.jf.dexlib2.util.MethodUtil;
 import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 
+import javax.annotation.Nonnull;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,14 +37,22 @@ public class Dex2c {
      * @return 输出结果配置
      * @throws IOException
      */
-    public static GlobalDexConfig handleDexes(List<File> dexFiles,
-                                              ClassAndMethodFilter filter,
-                                              InstructionRewriter instructionRewriter,
-                                              File outDir) throws IOException {
+    public static GlobalDexConfig handleAllDex(@Nonnull List<File> dexFiles,
+                                               @Nonnull ClassAndMethodFilter filter,
+                                               @Nonnull InstructionRewriter instructionRewriter,
+                                               @Nonnull File outDir) throws IOException {
         if (!outDir.exists()) outDir.mkdirs();
         final GlobalDexConfig globalConfig = new GlobalDexConfig(outDir);
+
+        //先加载所有dex文件,以便分析一些有问题的代码
+        final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
         for (File file : dexFiles) {
-            final DexConfig config = handleDex(file, filter, instructionRewriter, outDir);
+            classAnalyzer.loadDexFile(file);
+        }
+        //todo api 21/22 需要把sdk转为dex,再加入进来一起分析
+
+        for (File file : dexFiles) {
+            final DexConfig config = handleDex(file, filter, classAnalyzer, instructionRewriter, outDir);
             globalConfig.addDexConfig(config);
         }
         globalConfig.generateJniInitCode();
@@ -49,65 +61,30 @@ public class Dex2c {
 
     /**
      * 处理单个dex文件
-     *
-     * @param dexFile dex文件
-     * @param outDir  输出目录
-     * @return 输出配置
-     * @throws IOException
      */
-    public static DexConfig handleDex(File dexFile,
-                                      ClassAndMethodFilter filter,
-                                      InstructionRewriter instructionRewriter,
-                                      File outDir) throws IOException {
+    public static DexConfig handleDex(@Nonnull File dexFile,
+                                      @Nonnull ClassAndMethodFilter filter,
+                                      @Nonnull ClassAnalyzer classAnalyzer,
+                                      @Nonnull InstructionRewriter instructionRewriter,
+                                      @Nonnull File outDir) throws IOException {
         return handleDex(new BufferedInputStream(new FileInputStream(dexFile)),
                 dexFile.getName(),
                 filter,
+                classAnalyzer,
                 instructionRewriter,
                 outDir);
     }
 
     /**
      * 处理单个dex流
-     *
-     * @param dex         dex流
-     * @param dexFileName dex名,输出文件需要
-     * @param outDir      输出目录
-     * @return 输出配置
-     * @throws IOException
      */
-    public static DexConfig handleDex(InputStream dex,
-                                      String dexFileName,
-                                      ClassAndMethodFilter filter,
-                                      InstructionRewriter instructionRewriter,
-                                      File outDir) throws IOException {
-        DexBackedDexFile originDexFile = DexBackedDexFile.fromInputStream(
-                Opcodes.getDefault(),
-                dex);
-
-        //把方法变为本地方法,用它替换掉原本的dex
-        DexPool shellDexPool = new DexPool(Opcodes.getDefault());
-
-        DexPool nativeImplDexPool = new DexPool(Opcodes.getDefault());
-
-
-        for (final ClassDef classDef : originDexFile.getClasses()) {
-            if (filter.acceptClass(classDef)) {
-                //把需要转换的方法设为native
-                shellDexPool.internClass(new ClassMethodToNative(classDef, filter));
-                //收集所有需要转换的方法生成新dex
-                nativeImplDexPool.internClass(new ClassToSymDex(classDef, filter));
-            } else {
-                //不需要处理的class,直接复制
-                shellDexPool.internClass(classDef);
-            }
-        }
-        DexConfig config = new DexConfig(outDir, dexFileName);
-
-
-        //写入需要运行的dex
-        shellDexPool.writeTo(new FileDataStore(config.getShellDexFile()));
-        //写入符号dex
-        nativeImplDexPool.writeTo(new FileDataStore(config.getImplDexFile()));
+    public static DexConfig handleDex(@Nonnull InputStream dex,
+                                      @Nonnull String dexFileName,
+                                      @Nonnull ClassAndMethodFilter filter,
+                                      @Nonnull ClassAnalyzer classAnalyzer,
+                                      @Nonnull InstructionRewriter instructionRewriter,
+                                      @Nonnull File outDir) throws IOException {
+        DexConfig config = splitDex(dex, dexFileName, filter, classAnalyzer, outDir);
 
 
         final DexBackedDexFile nativeImplDexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
@@ -117,7 +94,6 @@ public class Dex2c {
         try (FileWriter nativeCodeWriter = new FileWriter(config.getNativeFunctionsFile());
              FileWriter resolverWriter = new FileWriter(config.getResolverFile());
         ) {
-            final ClassAnalyzer classAnalyzer = new ClassAnalyzer(originDexFile);
             JniCodeGenerator codeGenerator = new JniCodeGenerator(nativeImplDexFile,
                     classAnalyzer,
                     instructionRewriter);
@@ -130,30 +106,85 @@ public class Dex2c {
             config.setResult(codeGenerator);
         }
 
-
-        //可以不用产生头文件，直接使用extern
-        /*
-        DexConfig.HeaderFileAndSetupFuncName func = config.getHeaderFileAndSetupFunc();
-        // 产生头文件包含导出函数,给外部调用
-        try (FileWriter headerWriter = new FileWriter(func.headerFile)) {
-            headerWriter.write(String.format(
-                    "#include <jni.h>\n" +
-                            "\n" +
-                            "#ifdef __cplusplus\n" +
-                            "extern \"C\" {\n" +
-                            "#endif\n" +
-                            "\n" +
-                            "\n" +
-                            "\n" +
-                            "void %s(JNIEnv *env);\n" +
-                            "\n" +
-                            "\n" +
-                            "#ifdef __cplusplus\n" +
-                            "}\n" +
-                            "#endif\n\n", func.setupFunctionName));
-        }
-        */
         return config;
+    }
+
+    //分割dex产生两个dex,一个为壳dex,一个为实现dex,壳dex将会打包进apk,实现dex会被转换为c代码
+    @Nonnull
+    private static DexConfig splitDex(@Nonnull InputStream dex,
+                                      @Nonnull String dexFileName,
+                                      @Nonnull ClassAndMethodFilter filter,
+                                      @Nonnull ClassAnalyzer classAnalyzer,
+                                      @Nonnull File outDir) throws IOException {
+        DexBackedDexFile originDexFile = DexBackedDexFile.fromInputStream(
+                Opcodes.getDefault(),
+                dex);
+
+        //把方法变为本地方法,用它替换掉原本的dex
+        DexPool shellDexPool = new DexPool(Opcodes.getDefault());
+
+        DexPool nativeImplDexPool = new DexPool(Opcodes.getDefault());
+
+        //todo 外部传递minApi进来
+        final MethodConverter methodConverter = new MethodConverter(classAnalyzer, 21);
+
+        for (final ClassDef classDef : originDexFile.getClasses()) {
+            if (filter.acceptClass(classDef)) {
+                final ArrayList<Method> shellDirectMethods = new ArrayList<>();
+                final ArrayList<Method> shellVirtualMethods = new ArrayList<>();
+
+                final ArrayList<Method> implDirectMethods = new ArrayList<>();
+                final ArrayList<Method> implVirtualMethods = new ArrayList<>();
+
+                // 处理所有需要转换的方法
+                for (Method method : classDef.getMethods()) {
+                    if (filter.acceptMethod(method)) {
+                        final Pair<List<? extends Method>, Method> pair = methodConverter.convert(method);
+                        // 转换后可能出现变为多个方法
+                        addMethods(shellDirectMethods, shellVirtualMethods, pair.first);
+                        //只有一个具体实现
+                        addMethod(implDirectMethods, implVirtualMethods, pair.second);
+                    } else {
+                        //不需要进行处理
+                        addMethod(shellDirectMethods, shellVirtualMethods, method);
+                    }
+                }
+
+                //把需要转换的方法设为native
+                shellDexPool.internClass(new MyClassDef(classDef, shellDirectMethods, shellVirtualMethods));
+                //收集所有需要转换的方法生成新dex
+                nativeImplDexPool.internClass(new MyClassDef(classDef, implDirectMethods, implVirtualMethods));
+            } else {
+                //不需要处理的class,直接复制
+                shellDexPool.internClass(classDef);
+            }
+        }
+        DexConfig config = new DexConfig(outDir, dexFileName);
+
+
+        //写入需要运行的dex
+        shellDexPool.writeTo(new FileDataStore(config.getShellDexFile()));
+        //写入符号dex
+        nativeImplDexPool.writeTo(new FileDataStore(config.getImplDexFile()));
+        return config;
+    }
+
+    private static void addMethods(List<Method> directMethods,
+                                   List<Method> virtualMethods,
+                                   List<? extends Method> methods) {
+        for (Method method : methods) {
+            addMethod(directMethods, virtualMethods, method);
+        }
+    }
+
+    private static void addMethod(List<Method> directMethods,
+                                  List<Method> virtualMethods,
+                                  Method method) {
+        if (MethodUtil.isDirect(method)) {
+            directMethods.add(method);
+        } else {
+            virtualMethods.add(method);
+        }
     }
 
     //在处理过的class的static{}块最前面添加注册本地方法代码,如果不存在static{}块则新增<clinit>方法

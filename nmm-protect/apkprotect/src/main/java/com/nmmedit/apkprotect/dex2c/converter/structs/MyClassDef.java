@@ -1,6 +1,7 @@
 package com.nmmedit.apkprotect.dex2c.converter.structs;
 
-import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
+
+import com.google.common.collect.Iterators;
 import org.jf.dexlib2.base.reference.BaseTypeReference;
 import org.jf.dexlib2.iface.Annotation;
 import org.jf.dexlib2.iface.ClassDef;
@@ -9,22 +10,27 @@ import org.jf.dexlib2.iface.Method;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
+import java.util.AbstractCollection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-/**
- * 收集方法代码,把它们放入全新的dex中,改变class及其他各种索引让人难以简单恢复原本代码，
- * 就算逆向出指令流也需要重新合并多个dex
- */
-public class ClassToSymDex extends BaseTypeReference implements ClassDef {
+
+public class MyClassDef extends BaseTypeReference implements ClassDef {
+    @Nonnull
     private final ClassDef classDef;
+    @Nonnull
+    private final List<? extends Method> directMethods;
+    @Nonnull
+    private final List<? extends Method> virtualMethods;
 
-    private final ClassAndMethodFilter filter;
 
-    public ClassToSymDex(ClassDef classDef, ClassAndMethodFilter filter) {
+    public MyClassDef(@Nonnull ClassDef classDef,
+                      @Nonnull List<? extends Method> directMethods,
+                      @Nonnull List<? extends Method> virtualMethods) {
         this.classDef = classDef;
-        this.filter = filter;
+        this.directMethods = directMethods;
+        this.virtualMethods = virtualMethods;
     }
 
     @Nonnull
@@ -53,7 +59,6 @@ public class ClassToSymDex extends BaseTypeReference implements ClassDef {
     @Nullable
     @Override
     public String getSourceFile() {
-        //忽略
         return null;
     }
 
@@ -84,32 +89,30 @@ public class ClassToSymDex extends BaseTypeReference implements ClassDef {
     @Nonnull
     @Override
     public Iterable<? extends Method> getDirectMethods() {
-        Iterable<? extends Method> directMethods = classDef.getDirectMethods();
-        return filterMethods(directMethods);
+        return directMethods;
     }
 
     @Nonnull
     @Override
     public Iterable<? extends Method> getVirtualMethods() {
-        Iterable<? extends Method> virtualMethods = classDef.getVirtualMethods();
-        return filterMethods(virtualMethods);
+        return virtualMethods;
     }
 
     @Nonnull
     @Override
     public Iterable<? extends Method> getMethods() {
-        Iterable<? extends Method> methods = classDef.getMethods();
-        return filterMethods(methods);
-    }
-
-    //过滤掉不转换的方法
-    private Iterable<? extends Method> filterMethods(Iterable<? extends Method> methods) {
-        ArrayList<Method> newMethods = new ArrayList<>();
-        for (Method method : methods) {
-            if (filter.acceptMethod(method)) {
-                newMethods.add(method);
+//        return Iterables.concat(directMethods, virtualMethods);
+        return new AbstractCollection<Method>() {
+            @Nonnull
+            @Override
+            public Iterator<Method> iterator() {
+                return Iterators.concat(directMethods.iterator(), virtualMethods.iterator());
             }
-        }
-        return newMethods;
+
+            @Override
+            public int size() {
+                return directMethods.size() + virtualMethods.size();
+            }
+        };
     }
 }

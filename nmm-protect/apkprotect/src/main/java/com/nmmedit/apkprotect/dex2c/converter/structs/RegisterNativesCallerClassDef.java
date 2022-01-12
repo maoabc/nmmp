@@ -1,5 +1,6 @@
 package com.nmmedit.apkprotect.dex2c.converter.structs;
 
+import com.google.common.collect.Iterables;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.HiddenApiRestriction;
 import org.jf.dexlib2.Opcode;
@@ -125,15 +126,7 @@ public class RegisterNativesCallerClassDef extends BaseTypeReference implements 
     @Nonnull
     @Override
     public Iterable<? extends Method> getMethods() {
-        final ArrayList<Method> methods = new ArrayList<>();
-        for (Method directMethod : getDirectMethods()) {
-            methods.add(directMethod);
-        }
-
-        for (Method virtualMethod : getVirtualMethods()) {
-            methods.add(virtualMethod);
-        }
-        return methods;
+        return Iterables.concat(getDirectMethods(), getVirtualMethods());
     }
 
 
