@@ -26,6 +26,32 @@ public class AxmlEdit {
         }
         return "";
     }
+    @Nonnull
+    public static int  getMinSdk(@Nonnull byte[] manifestBytes) {
+        ResourceFile file = new ResourceFile(manifestBytes);
+        for (Chunk chunk : file.getChunks()) {
+            if (chunk instanceof XmlChunk) {
+                XmlChunk xmlChunk = (XmlChunk) chunk;
+                for (Chunk subChunk : xmlChunk.getChunks().values()) {
+                    if (subChunk instanceof XmlStartElementChunk) {
+                        XmlStartElementChunk startElementChunk = (XmlStartElementChunk) subChunk;
+                        if (startElementChunk.getName().equals("uses-sdk")) {
+                            List<XmlAttribute> attributes = startElementChunk.getAttributes();
+                            for (XmlAttribute attribute : attributes) {
+                                ResourceValue typedValue = attribute.typedValue();
+                                if (attribute.name().equals("minSdkVersion") &&
+                                        typedValue.type() == ResourceValue.Type.INT_DEC) {
+                                    return attribute.typedValue().data();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //最低按安卓5
+        return 21;
+    }
 
     @Nonnull
     public static String getPackageName(@Nonnull byte[] manifestBytes) {

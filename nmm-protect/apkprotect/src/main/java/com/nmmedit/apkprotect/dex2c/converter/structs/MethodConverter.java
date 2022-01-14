@@ -12,32 +12,31 @@ import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.MethodImplementation;
+import org.jf.dexlib2.iface.MethodParameter;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.util.MethodUtil;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class MethodConverter {
-    private final int minApi;
 
     @Nonnull
     private final ClassAnalyzer classAnalyzer;
 
-    public MethodConverter(@Nonnull ClassAnalyzer classAnalyzer, int minApi) {
+    public MethodConverter(@Nonnull ClassAnalyzer classAnalyzer) {
         this.classAnalyzer = classAnalyzer;
-        this.minApi = minApi;
     }
 
     //转换方法为native及具体实现
     @Nonnull
     public Pair<List<? extends Method>, Method> convert(@Nonnull Method method) {
         // android6及以上不用特别处理
-        if (MethodUtil.isDirect(method) ||
-                minApi >= 23) {
+        if (MethodUtil.isDirect(method)) {
             return splitMethod(method);
         } else {
             // virtual method
@@ -64,8 +63,8 @@ public class MethodConverter {
         return new ImmutableMethod(
                 method.getDefiningClass(),
                 method.getName(),
-                //调试信息 关于参数名之类的,把它们设置为空,不然指令为空时也会写入无用代码段,可能导致dex文件格式有问题
-                Collections.emptyList(),
+                // 因为方法实现被去掉,不删除参数annotation之类会导致生成的dex有问题
+                removeAnnotation(method.getParameters()),
                 method.getReturnType(),
                 //添加native标识
                 method.getAccessFlags() | AccessFlags.NATIVE.getValue(),
@@ -130,7 +129,8 @@ public class MethodConverter {
         final ImmutableMethod shellNativeMethod = new ImmutableMethod(
                 method.getDefiningClass(),
                 newMethodName,
-                Collections.emptyList(),
+                //去掉参数annotation,不然dex格式有问题
+                removeAnnotation(method.getParameters()),
                 method.getReturnType(),
                 //私有的native方法
                 accessFlags | AccessFlags.NATIVE.getValue(),
@@ -142,7 +142,7 @@ public class MethodConverter {
         final ImmutableMethod implNativeMethod = new ImmutableMethod(
                 method.getDefiningClass(),
                 newMethodName,
-                Collections.emptyList(),
+                method.getParameters(),
                 method.getReturnType(),
                 accessFlags,
                 method.getAnnotations(),
@@ -166,15 +166,26 @@ public class MethodConverter {
         return new Pair<>(Arrays.asList(method1, shellNativeMethod), implNativeMethod);
     }
 
+    // 删除参数的annotation
+    private static List<? extends MethodParameter> removeAnnotation(List<? extends MethodParameter> parameters) {
+        final ArrayList<EmptyAnnotationMethodParameter> newParameters = new ArrayList<>();
+        for (MethodParameter parameter : parameters) {
+            newParameters.add(new EmptyAnnotationMethodParameter(parameter.getType()));
+        }
+        return newParameters;
+    }
+
     private static MethodImplementation buildCallShellNativeMethodImpl(Method method, MethodReference shellNativeMethod) {
-        // 生成方法调用代码,没有本地寄存器只以参数寄存器为准
+        // 生成方法调用代码
         final int parameterRegisterCount = MethodUtil.getParameterRegisterCount(method);
 
         final String returnType = method.getReturnType();
 
-        //得到接收方法返回值所需要的寄存器
+        // 得到接收方法返回值所需要的寄存器数量
         final int resultRegisterWidth = getResultRegisterWidth(returnType);
 
+        // 保证方法有足够的寄存器保存方法调用后的返回值,
+        // 比如签名为(I)J的静态方法,如果直接用参数寄存器接收返回结果,会导致单个寄存器无法保存long
         final int registerCount = Math.max(resultRegisterWidth, parameterRegisterCount);
 
 
@@ -216,7 +227,7 @@ public class MethodConverter {
             final BuilderInstruction11x instruction = new BuilderInstruction11x(Opcode.RETURN_WIDE, returnReg);
             methodImpl.addInstruction(instruction);
 
-        } else if (firstChar == 'L') {
+        } else if (firstChar == 'L' || firstChar == '[') {
             final BuilderInstruction11x moveResult = new BuilderInstruction11x(Opcode.MOVE_RESULT_OBJECT, returnReg);
             methodImpl.addInstruction(moveResult);
 

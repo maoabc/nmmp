@@ -5,6 +5,7 @@ import com.nmmedit.apkprotect.data.Prefs;
 import com.nmmedit.apkprotect.dex2c.Dex2c;
 import com.nmmedit.apkprotect.dex2c.DexConfig;
 import com.nmmedit.apkprotect.dex2c.GlobalDexConfig;
+import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.converter.structs.RegisterNativesUtilClassDef;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
@@ -37,10 +38,13 @@ public class ApkProtect {
     private final ApkVerifyCodeGenerator apkVerifyCodeGenerator;
     private final ClassAndMethodFilter filter;
 
+    private final ClassAnalyzer classAnalyzer;
+
     private ApkProtect(ApkFolders apkFolders,
                        InstructionRewriter instructionRewriter,
                        ApkVerifyCodeGenerator apkVerifyCodeGenerator,
-                       ClassAndMethodFilter filter
+                       ClassAndMethodFilter filter,
+                       ClassAnalyzer classAnalyzer
     ) {
         this.apkFolders = apkFolders;
 
@@ -48,6 +52,7 @@ public class ApkProtect {
 
         this.apkVerifyCodeGenerator = apkVerifyCodeGenerator;
         this.filter = filter;
+        this.classAnalyzer = classAnalyzer;
 
     }
 
@@ -72,10 +77,28 @@ public class ApkProtect {
             if (files.isEmpty()) {
                 throw new RuntimeException("No classes.dex");
             }
+            final int minSdk = AxmlEdit.getMinSdk(manifestBytes);
+
+            classAnalyzer.setMinSdk(minSdk);
+
+            if (minSdk < 23) {
+               //todo 加载android5的sdk,以保证能正确分析一些有问题的代码
+            }
+
+            //
+
+
+            //先加载apk包含的所有dex文件,以便分析一些有问题的代码
+            for (File file : files) {
+                classAnalyzer.loadDexFile(file);
+            }
+
+
             //globalConfig里面configs顺序和classesN.dex文件列表一样
             final GlobalDexConfig globalConfig = Dex2c.handleAllDex(files,
                     filter,
                     instructionRewriter,
+                    classAnalyzer,
                     apkFolders.getCodeGeneratedDir());
 
 
@@ -624,6 +647,7 @@ public class ApkProtect {
         private InstructionRewriter instructionRewriter;
         private ApkVerifyCodeGenerator apkVerifyCodeGenerator;
         private ClassAndMethodFilter filter;
+        private ClassAnalyzer classAnalyzer;
 
 
         public Builder(ApkFolders apkFolders) {
@@ -645,11 +669,19 @@ public class ApkProtect {
             return this;
         }
 
+        public Builder setClassAnalyzer(ClassAnalyzer classAnalyzer) {
+            this.classAnalyzer = classAnalyzer;
+            return this;
+        }
+
         public ApkProtect build() {
             if (instructionRewriter == null) {
                 throw new RuntimeException("instructionRewriter == null");
             }
-            return new ApkProtect(apkFolders, instructionRewriter, apkVerifyCodeGenerator, filter);
+            if (classAnalyzer == null) {
+                throw new RuntimeException("classAnalyzer==null");
+            }
+            return new ApkProtect(apkFolders, instructionRewriter, apkVerifyCodeGenerator, filter, classAnalyzer);
         }
     }
 }

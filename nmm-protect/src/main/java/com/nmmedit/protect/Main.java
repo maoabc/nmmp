@@ -3,6 +3,7 @@ package com.nmmedit.protect;
 import com.nmmedit.apkprotect.ApkFolders;
 import com.nmmedit.apkprotect.ApkProtect;
 import com.nmmedit.apkprotect.deobfus.MappingReader;
+import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.RandomInstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.filters.*;
 import com.nmmedit.apkprotect.sign.ApkVerifyCodeGenerator;
@@ -37,6 +38,8 @@ public class Main {
             filterConfig = new SimpleConvertConfig(new BasicKeepConfig(), simpleRules);
         }
 
+        final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
+        //todo 可能需要加载某项厂商私有的sdk
 
 
         final ApkFolders apkFolders = new ApkFolders(apk, outDir);
@@ -48,6 +51,7 @@ public class Main {
                 .setInstructionRewriter(new RandomInstructionRewriter())
                 .setApkVerifyCodeGenerator(apkVerifyCodeGenerator)
                 .setFilter(filterConfig)
+                .setClassAnalyzer(classAnalyzer)
                 .build();
         apkProtect.run();
     }

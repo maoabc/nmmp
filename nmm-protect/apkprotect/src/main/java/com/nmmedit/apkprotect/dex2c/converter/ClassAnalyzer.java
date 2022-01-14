@@ -25,9 +25,14 @@ import java.util.Map;
 public class ClassAnalyzer {
     private final Map<String, ClassDef> allClasses = Maps.newHashMap();
 
+    private int minSdk = 21;
+
     public ClassAnalyzer() {
     }
 
+    public void setMinSdk(int minSdk) {
+        this.minSdk = minSdk;
+    }
 
     public void loadDexFile(@Nonnull File dexFile) throws IOException {
         loadDexFile(DexBackedDexFile.fromInputStream(Opcodes.getDefault(), new BufferedInputStream(new FileInputStream(dexFile))));
@@ -80,16 +85,19 @@ public class ClassAnalyzer {
 
     @Nullable
     public MethodReference findDirectMethod(@Nonnull MethodReference method) {
-        final ClassDef classDef = allClasses.get(method.getDefiningClass());
-        if (classDef == null) {
-            return null;
+        if (minSdk < 23) {
+            final ClassDef classDef = allClasses.get(method.getDefiningClass());
+            if (classDef == null) {
+                return null;
+            }
+            //从父类的direct method中查找名称和签名相同的方法
+            final ClassDef superClass = allClasses.get(classDef.getSuperclass());
+            return findDirectMethod(superClass,
+                    method.getName(),
+                    method.getParameterTypes(),
+                    method.getReturnType());
         }
-        //从父类的direct method中查找名称和签名相同的方法
-        final ClassDef superClass = allClasses.get(classDef.getSuperclass());
-        return findDirectMethod(superClass,
-                method.getName(),
-                method.getParameterTypes(),
-                method.getReturnType());
+        return null;
 
     }
 
@@ -101,9 +109,9 @@ public class ClassAnalyzer {
     //先查找当前类的direct method,找不到则查找超类的direct method
     @Nullable
     private MethodReference findDirectMethod(@Nonnull ClassDef thisClass,
-                                    @Nonnull String name,
-                                    @Nonnull List<? extends CharSequence> parameterTypes,
-                                    @Nonnull String returnType
+                                             @Nonnull String name,
+                                             @Nonnull List<? extends CharSequence> parameterTypes,
+                                             @Nonnull String returnType
     ) {
         for (ClassDef classDef = thisClass; classDef != null; classDef = allClasses.get(classDef.getSuperclass())) {
             for (Method directMethod : classDef.getDirectMethods()) {
@@ -117,12 +125,13 @@ public class ClassAnalyzer {
         }
         return null;
     }
+
     // 在当前类中查找方法,如果找不到则查找父类
     @Nullable
     public MethodReference findMethod(@Nonnull ClassDef thisClass,
-                                             @Nonnull String name,
-                                             @Nonnull List<? extends CharSequence> parameterTypes,
-                                             @Nonnull String returnType
+                                      @Nonnull String name,
+                                      @Nonnull List<? extends CharSequence> parameterTypes,
+                                      @Nonnull String returnType
     ) {
         for (ClassDef classDef = thisClass; classDef != null; classDef = allClasses.get(classDef.getSuperclass())) {
             for (Method method : classDef.getMethods()) {

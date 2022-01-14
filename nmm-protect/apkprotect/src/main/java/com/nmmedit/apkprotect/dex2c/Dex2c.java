@@ -40,16 +40,10 @@ public class Dex2c {
     public static GlobalDexConfig handleAllDex(@Nonnull List<File> dexFiles,
                                                @Nonnull ClassAndMethodFilter filter,
                                                @Nonnull InstructionRewriter instructionRewriter,
+                                               @Nonnull ClassAnalyzer classAnalyzer,
                                                @Nonnull File outDir) throws IOException {
         if (!outDir.exists()) outDir.mkdirs();
         final GlobalDexConfig globalConfig = new GlobalDexConfig(outDir);
-
-        //先加载所有dex文件,以便分析一些有问题的代码
-        final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
-        for (File file : dexFiles) {
-            classAnalyzer.loadDexFile(file);
-        }
-        //todo api 21/22 需要把sdk转为dex,再加入进来一起分析
 
         for (File file : dexFiles) {
             final DexConfig config = handleDex(file, filter, classAnalyzer, instructionRewriter, outDir);
@@ -125,8 +119,7 @@ public class Dex2c {
 
         DexPool nativeImplDexPool = new DexPool(Opcodes.getDefault());
 
-        //todo 外部传递minApi进来
-        final MethodConverter methodConverter = new MethodConverter(classAnalyzer, 21);
+        final MethodConverter methodConverter = new MethodConverter(classAnalyzer);
 
         for (final ClassDef classDef : originDexFile.getClasses()) {
             if (filter.acceptClass(classDef)) {
