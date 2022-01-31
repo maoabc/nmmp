@@ -5,12 +5,11 @@ import com.google.gson.annotations.SerializedName;
 public class Config {
     @SerializedName("abi")
     public AbiConfig abi;
-    @SerializedName("path")
-    public PathConfig path;
-    @SerializedName("ndk")
-    public NdkConfig ndk;
+    @SerializedName("environment")
+    public PathConfig environment;
 
-    public Config(AbiConfig abi) {
+    public Config(AbiConfig abi, PathConfig environment) {
         this.abi = abi;
+        this.environment = environment;
     }
 }
