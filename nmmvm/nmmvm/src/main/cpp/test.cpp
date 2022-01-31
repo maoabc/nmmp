@@ -979,9 +979,6 @@ JNIEXPORT void Java_com_nmmedit_vm_TestJniRegisterNatives_initClass
 }
 
 
-
-
-
 //测试android6下调用jna函数问题
 jstring constString2(JNIEnv *env, u4 idx) {
     const char *str = dexStringById(pDex, idx);
@@ -1019,6 +1016,21 @@ JNIEXPORT void Java_com_nmmedit_vm_VmTest_callJna0
 
     jvalue value = vmInterpret(env, &code, &dvmResolver);
 }
+
+
+JNIEXPORT void Java_com_nmmedit_vm_VmTest_callJnaPassStr
+        (JNIEnv *env, jclass clazz) {
+    jclass testCls = env->FindClass("com/nmmedit/jna/TestJna");
+    jfieldID fid = env->GetStaticFieldID(testCls, "INSTANCE", "Lcom/nmmedit/jna/TestJna;");
+    jmethodID passStrMethodId = env->GetMethodID(testCls, "pass_str", "(Ljava/lang/String;)V");
+
+    jobject instance = env->GetStaticObjectField(testCls, fid);
+    //创建参数
+    jstring arg = env->NewStringUTF("Hello world");
+    //调用pass_str
+    env->CallVoidMethod(instance, passStrMethodId, arg);
+}
+
 
 #ifdef __cplusplus
 }

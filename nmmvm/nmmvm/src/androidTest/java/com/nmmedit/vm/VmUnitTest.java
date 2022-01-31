@@ -302,5 +302,10 @@ public class VmUnitTest {
     public void testPassStringJna(){
         VmTest.callJna0();
     }
+
+    @Test
+    public void testJniCallJnaPassStr(){
+        VmTest.callJnaPassStr();
+    }
 }
 
