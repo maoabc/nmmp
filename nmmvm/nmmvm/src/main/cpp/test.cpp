@@ -978,6 +978,48 @@ JNIEXPORT void Java_com_nmmedit_vm_TestJniRegisterNatives_initClass
     env->RegisterNatives(cls, &methods, 1);
 }
 
+
+
+
+
+//测试android6下调用jna函数问题
+jstring constString2(JNIEnv *env, u4 idx) {
+    const char *str = dexStringById(pDex, idx);
+    ALOGD("resolve string %s", str);
+    jstring pJstring = env->NewStringUTF(str);
+//    jobject gstr = env->NewGlobalRef(pJstring);
+    return pJstring;
+}
+
+JNIEXPORT void Java_com_nmmedit_vm_VmTest_callJna0
+        (JNIEnv *env, jclass clazz) {
+
+    const DexCode *dexCode = findDexCode("Lcom/nmmedit/vm/VmTest;", "callJna");
+    if (dexCode == NULL) {
+        return;
+    }
+
+    u2 registersSize = dexCode->registersSize;
+
+    regptr_t *regs = (regptr_t *) calloc(registersSize, sizeof(regptr_t));
+    u1 *reg_flags = (u1 *) calloc(registersSize, sizeof(u1));
+
+    const u2 *insns = dexCode->insns;
+    u4 insnsSize = dexCode->insnsSize;
+    const vmCode code = {
+            .insns=insns,
+            .insnsSize=insnsSize,
+            .regs=regs,
+            .reg_flags=reg_flags,
+            .triesHandlers=NULL
+    };
+
+    //替换constString方法
+    dvmResolver.dvmConstantString = constString2;
+
+    jvalue value = vmInterpret(env, &code, &dvmResolver);
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -297,5 +297,10 @@ public class VmUnitTest {
         final TestJniRegisterNatives inflater = new TestJniRegisterNatives();
         final Object realOwner = inflater.getRealOwner();
     }
+
+    @Test
+    public void testPassStringJna(){
+        VmTest.callJna0();
+    }
 }
 

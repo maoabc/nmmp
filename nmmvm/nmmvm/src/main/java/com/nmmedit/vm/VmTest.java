@@ -6,6 +6,8 @@ import android.util.LongSparseArray;
 
 import androidx.annotation.Keep;
 
+import com.nmmedit.jna.TestJna;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -269,6 +271,14 @@ public class VmTest extends ArrayList {
     }
 
     public native static boolean constString1();
+
+    //测试native化后,在安卓6下传递传输到jna方法错误问题
+    public static void callJna() {
+        String s = "hello world";
+        TestJna.INSTANCE.pass_str(s);
+    }
+
+    public native static void callJna0();
 }
 
 

@@ -16,7 +16,7 @@ include_directories(custom)
 file(GLOB GEN_SOURCES test/*_functions.c)
 
 set(TEST_SRC
-#        test/classes_native_functions.c
+        #        test/classes_native_functions.c
         test.cpp
         temp_jni_init.c
         temp_functions.c
@@ -26,16 +26,19 @@ set(TEST_SRC
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fvisibility=hidden")
 
 
-if(${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "x86")
+if (${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "x86")
     add_definitions("-D_32_BIT")
-elseif(${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
+elseif (${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
     add_definitions("-D_64_BIT")
-endif()
+endif ()
 
 
-
-add_library(nmmp SHARED ConstantPool.c ${TEST_SRC} )
-
+add_library(nmmp SHARED ConstantPool.c ${TEST_SRC})
 
 
-target_link_libraries(nmmp nmmvm dex log )
+target_link_libraries(nmmp nmmvm dex log)
+
+
+add_library(test-jna SHARED test_jna.c)
+
+target_link_libraries(test-jna log)
