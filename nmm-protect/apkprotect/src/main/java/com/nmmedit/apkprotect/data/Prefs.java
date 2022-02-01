@@ -32,7 +32,16 @@ public class Prefs {
         Gson gson = builder.create();
         try {
             String content = FileUtils.readFile(CONFIG_PATH, StandardCharsets.UTF_8);
-            return gson.fromJson(content, Config.class);
+            final Config config = gson.fromJson(content, Config.class);
+            //compact old config
+            if (config.environment == null) {
+                //remove old config
+                final File file = new File(CONFIG_PATH);
+                file.delete();
+                //load new config
+                return config();
+            }
+            return config;
         } catch (IOException e) {
             throw new RuntimeException("Load config failed", e);
         }
