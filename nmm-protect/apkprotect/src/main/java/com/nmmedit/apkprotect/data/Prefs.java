@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class Prefs {
-    public static final String CONFIG_PATH = new File(FileUtils.getHomePath(), "tools/config.json").getAbsolutePath();
+    public static final String CONFIG_PATH = new File(FileUtils.getHomePath(), "tools/" + (OsDetector.isWindows() ? "config-windows.json" : "config.json")).getAbsolutePath();
 
     public static Config config() {
         final File configFile = new File(CONFIG_PATH);
@@ -25,6 +25,7 @@ public class Prefs {
             ) {
                 FileUtils.copyStream(inputStream, outputStream);
             } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         GsonBuilder builder = new GsonBuilder();
@@ -54,18 +55,34 @@ public class Prefs {
     }
 
     public static String sdkPath() {
-        return config().path.sdk;
+        return config().environment.sdk_path;
     }
 
     public static String cmakePath() {
-        return config().path.cmake;
+        return config().environment.cmake_path;
+    }
+
+    public static String cmakeVersion() {
+        return config().environment.cmake_version;
     }
 
     public static String ndkPath() {
-        return config().path.ndk;
+        return config().environment.ndk_path;
     }
 
-    public static String osName() {
-        return config().ndk.osName;
+    public static String ndkVersion() {
+        return config().environment.ndk_version;
+    }
+
+    public static String ndkToolchains() {
+        return config().environment.ndk_toolchains;
+    }
+
+    public static String ndkAbi() {
+        return config().environment.ndk_abi;
+    }
+
+    public static String ndkStrip() {
+        return config().environment.ndk_strip;
     }
 }

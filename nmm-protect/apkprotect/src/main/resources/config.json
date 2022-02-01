@@ -7,13 +7,19 @@
     "x86_64": false
   },
   // If you do not have environment variables set, enter the path to SDK, NDK and CMAKE
-  "path": {
-    "sdk": "/opt/android-sdk",
-    "cmake": "/opt/android-sdk/cmake/3.18.1",
-    "ndk": "/opt/android-sdk/ndk/22.1.7171670"
-  },
-  // Indicate under which platform the NDK is installed
-  "ndk": {
-    "os_name": "linux-x86_64"
+  "environment": {
+    // Full path: /opt/android-sdk
+    "sdk_path": "/opt/android-sdk",
+
+    // Full path: /opt/android-sdkcmake/3.18.1
+    "cmake_path": "/opt/android-sdk/cmake/",
+    "cmake_version": "3.18.1",
+
+    // Full path: /opt/android-sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+    "ndk_path": "/opt/android-sdk/ndk/",
+    "ndk_version": "23.1.7779620",
+    "ndk_toolchains": "/toolchains/llvm/prebuilt/",
+    "ndk_abi": "linux-x86_64",
+    "ndk_strip": "/bin/llvm-strip"
   }
 }

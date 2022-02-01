@@ -7,14 +7,19 @@
         "x86_64":false
     },
     // If you do not have environment variables set, enter the path to SDK, NDK and CMAKE
-    "path": {
-        "sdk": "/Android/Sdk", // E:\Android\Sdk
-        "cmake": "/Android/Sdk/cmake/3.10.2.4988404", // E:\Android\Sdk\cmake\3.10.2.4988404
-        "ndk": "/Android/Sdk/ndk/22.0.7026061" // E:\Android\Sdk\ndk\22.0.7026061
-    },
-    // Indicate under which platform the NDK is installed
-    "ndk": {
-        // For Linux: linux-x86_64
-        "os_name":"windows-x86_64" // E:\Android\Sdk\ndk\22.0.7026061\toolchains\arm-linux-androideabi-4.9\prebuilt\windows-x86_64\bin
+    "environment": {
+        // Full path: G:/Android/Sdk
+        "sdk_path": "G:/Android/Sdk",
+
+        // Full path: G:/Android/Sdk/cmake/3.18.1
+        "cmake_path": "G:/Android/Sdk/cmake",
+        "cmake_version": "3.18.1",
+
+        // Full path: G:/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip
+        "ndk_path": "G:/Android/Sdk/ndk",
+        "ndk_version": "23.1.7779620",
+        "ndk_toolchains": "/toolchains/llvm/prebuilt/",
+        "ndk_abi": "windows-x86_64",
+        "ndk_strip": "/bin/llvm-strip"
     }
 }

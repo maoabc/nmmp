@@ -186,7 +186,7 @@ public class ApkProtect {
         String cmakePath = System.getenv("CMAKE_PATH");
         if (isEmpty(cmakePath)) {
             System.err.println("No CMAKE_PATH");
-            cmakePath = Prefs.cmakePath();
+            cmakePath = Prefs.cmakePath() + File.separator + Prefs.cmakeVersion();
         }
         String sdkHome = System.getenv("ANDROID_SDK_HOME");
         if (isEmpty(sdkHome)) {
@@ -195,7 +195,7 @@ public class ApkProtect {
         }
         String ndkHome = System.getenv("ANDROID_NDK_HOME");
         if (isEmpty(ndkHome)) {
-            ndkHome = Prefs.ndkPath();
+            ndkHome = Prefs.ndkPath() + File.separator + Prefs.ndkVersion();
             System.err.println("No ANDROID_NDK_HOME. Default is " + ndkHome);
         }
 
