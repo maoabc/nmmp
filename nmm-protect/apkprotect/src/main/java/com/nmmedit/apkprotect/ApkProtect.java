@@ -82,7 +82,7 @@ public class ApkProtect {
             classAnalyzer.setMinSdk(minSdk);
 
             if (minSdk < 23) {
-               //todo 加载android5的sdk,以保证能正确分析一些有问题的代码
+                //todo 加载android5的sdk,以保证能正确分析一些有问题的代码
             }
 
             //
@@ -186,7 +186,7 @@ public class ApkProtect {
         String cmakePath = System.getenv("CMAKE_PATH");
         if (isEmpty(cmakePath)) {
             System.err.println("No CMAKE_PATH");
-            cmakePath = Prefs.cmakePath() + File.separator + Prefs.cmakeVersion();
+            cmakePath = Prefs.cmakePath();
         }
         String sdkHome = System.getenv("ANDROID_SDK_HOME");
         if (isEmpty(sdkHome)) {
@@ -195,7 +195,7 @@ public class ApkProtect {
         }
         String ndkHome = System.getenv("ANDROID_NDK_HOME");
         if (isEmpty(ndkHome)) {
-            ndkHome = Prefs.ndkPath() + File.separator + Prefs.ndkVersion();
+            ndkHome = Prefs.ndkPath();
             System.err.println("No ANDROID_NDK_HOME. Default is " + ndkHome);
         }
 

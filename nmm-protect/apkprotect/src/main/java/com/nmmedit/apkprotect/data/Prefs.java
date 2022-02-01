@@ -71,16 +71,9 @@ public class Prefs {
         return config().environment.cmake_path;
     }
 
-    public static String cmakeVersion() {
-        return config().environment.cmake_version;
-    }
 
     public static String ndkPath() {
         return config().environment.ndk_path;
-    }
-
-    public static String ndkVersion() {
-        return config().environment.ndk_version;
     }
 
     public static String ndkToolchains() {

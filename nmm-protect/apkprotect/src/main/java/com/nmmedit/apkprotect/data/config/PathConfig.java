@@ -7,13 +7,9 @@ public class PathConfig {
     public String sdk_path;
     @SerializedName("cmake_path")
     public String cmake_path;
-    @SerializedName("cmake_version")
-    public String cmake_version;
     @SerializedName("ndk_path")
     public String ndk_path;
 
-    @SerializedName("ndk_version")
-    public String ndk_version;
     @SerializedName("ndk_toolchains")
     public String ndk_toolchains;
     @SerializedName("ndk_abi")

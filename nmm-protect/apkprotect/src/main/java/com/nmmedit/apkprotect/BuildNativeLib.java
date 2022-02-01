@@ -33,9 +33,9 @@ public class BuildNativeLib {
         final List<File> sharedObjectPath = options.getSharedObjectFile();
         for (File file : sharedObjectPath) {
             execCmd(Arrays.asList(
-                    options.getStripBinaryPath(),
-                    "--strip-unneeded",
-                    file.getAbsolutePath()
+                            options.getStripBinaryPath(),
+                            "--strip-unneeded",
+                            file.getAbsolutePath()
                     )
             );
         }
@@ -143,31 +143,10 @@ public class BuildNativeLib {
                     String.format(".cxx/cmake/%s/%s", getBuildType().getBuildTypeName(), getAbi())).getAbsolutePath();
         }
 
-        // TODO: Fix me - if home_path environment exist
         public String getStripBinaryPath() {
-            return new File(getNdkHome(), File.separator /*+ Prefs.ndkVersion()*/ + Prefs.ndkToolchains() +
-                            Prefs.ndkAbi() + Prefs.ndkStrip()).getAbsolutePath();
+            return new File(getNdkHome(), Prefs.ndkToolchains() + "/" +
+                    Prefs.ndkAbi() + "/" + Prefs.ndkStrip()).getAbsolutePath();
         }
-
-        /*public String getStripBinaryPath() {
-            final String abi = getAbi();
-            switch (abi) {
-               case "armeabi-v7a":
-                     return new File(getNdkHome(), "/toolchains/arm-linux-androideabi-4.9/prebuilt/" +
-                                                Prefs.ndkAbi() + "/bin/arm-linux-androideabi-strip").getAbsolutePath();
-               case "arm64-v8a":
-                     return new File(getNdkHome(), "/toolchains/aarch64-linux-android-4.9/prebuilt/" +
-                                                Prefs.ndkAbi() + "/bin/aarch64-linux-android-strip").getAbsolutePath();
-               case "x86":
-                     return new File(getNdkHome(), "/toolchains/x86-4.9/prebuilt/" +
-                                                Prefs.ndkAbi() + "/bin/i686-linux-android-strip").getAbsolutePath();
-               case "x86_64":
-                     return new File(getNdkHome(), "/toolchains/x86_64-4.9/prebuilt/" +
-                                                Prefs.ndkAbi() + "/bin/x86_64-linux-android-strip").getAbsolutePath();
-            }
-            //不支持arm,mips和mips64以外的abi
-            throw new RuntimeException("Unsupported abi " + abi);
-        }*/
 
         public String getCmakeBinaryPath() {
             return new File(getCmakePath(), "/bin/cmake").getAbsolutePath();
