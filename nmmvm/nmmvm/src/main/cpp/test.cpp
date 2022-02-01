@@ -1027,8 +1027,10 @@ JNIEXPORT void Java_com_nmmedit_vm_VmTest_callJnaPassStr
     jobject instance = env->GetStaticObjectField(testCls, fid);
     //创建参数
     jstring arg = env->NewStringUTF("Hello world");
+    jvalue args[1];
+    args[0].l=arg;
     //调用pass_str
-    env->CallVoidMethod(instance, passStrMethodId, arg);
+    env->CallVoidMethodA(instance, passStrMethodId, args);
 }
 
 
