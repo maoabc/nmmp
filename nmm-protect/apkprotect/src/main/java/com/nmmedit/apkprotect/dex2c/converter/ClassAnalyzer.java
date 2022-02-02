@@ -7,6 +7,9 @@ import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Field;
 import org.jf.dexlib2.iface.Method;
+import org.jf.dexlib2.iface.MethodImplementation;
+import org.jf.dexlib2.iface.instruction.Instruction;
+import org.jf.dexlib2.iface.instruction.ReferenceInstruction;
 import org.jf.dexlib2.iface.reference.FieldReference;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableFieldReference;
@@ -25,6 +28,8 @@ import java.util.Map;
 public class ClassAnalyzer {
     private final Map<String, ClassDef> allClasses = Maps.newHashMap();
 
+    private boolean hasJna;
+
     private int minSdk = 21;
 
     public ClassAnalyzer() {
@@ -42,6 +47,53 @@ public class ClassAnalyzer {
         for (DexBackedClassDef classDef : dexFile.getClasses()) {
             allClasses.put(classDef.getType(), classDef);
         }
+        //jna这个类有不少本地方法,不会被混淆,所以通过它是否存在来判断是否使用了jna
+        hasJna = allClasses.containsKey("Lcom/sun/jna/Native;");
+    }
+
+    public boolean hasJnaLib() {
+        return hasJna;
+    }
+
+    // android6下直接通过jni调用jna方法会直接崩溃,所以需要判断是否有调用jna方法的指令.issue #31
+    // 遍历方法字节码,判断是否有直接调用jna方法的指令,如果有返回true
+    public boolean hasCallJnaMethod(@Nonnull Method method) {
+        if (!hasJnaLib()) {
+            return false;
+        }
+        final MethodImplementation implementation = method.getImplementation();
+        if (implementation == null) {
+            return false;
+        }
+        for (Instruction instruction : implementation.getInstructions()) {
+            switch (instruction.getOpcode()) {
+                //jna调用用的是调用接口方法,所以只需要检测这两个指令
+                case INVOKE_INTERFACE:
+                case INVOKE_INTERFACE_RANGE:
+                    MethodReference methodReference = (MethodReference) ((ReferenceInstruction) instruction).getReference();
+                    //如果调用的方法所在class实现接口中包含jna的Library则表示有直接调用jna的指令
+                    if (matchInterface(allClasses.get(methodReference.getDefiningClass()), "Lcom/sun/jna/Library;")) {
+                        return true;
+                    }
+            }
+        }
+        return false;
+    }
+
+    //判断class是否实现某个接口
+    private boolean matchInterface(ClassDef classDef, String interfaceType) {
+        if (classDef == null) {
+            return false;
+        }
+        for (String defInterface : classDef.getInterfaces()) {
+            if (defInterface.equals(interfaceType)) {
+                return true;
+            }
+            //再查找接口
+            final ClassDef ifClass = allClasses.get(defInterface);
+            return matchInterface(ifClass, interfaceType);
+        }
+        return false;
     }
 
     //处理接口中静态域无法通过子类获得值问题

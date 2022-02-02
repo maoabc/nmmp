@@ -131,7 +131,11 @@ public class Dex2c {
 
                 // 处理所有需要转换的方法
                 for (Method method : classDef.getMethods()) {
-                    if (filter.acceptMethod(method)) {
+                    if (filter.acceptMethod(method)
+                            // 有直接调用jna方法的指令,则不能进行native化
+                            // 感觉很少会发生,默认就把这个判断注释掉了,谁需要再去掉注释
+//                            && !classAnalyzer.hasCallJnaMethod(method)
+                    ) {
                         final Pair<List<? extends Method>, Method> pair = methodConverter.convert(method);
                         // 转换后可能出现变为多个方法
                         addMethods(shellDirectMethods, shellVirtualMethods, pair.first);
