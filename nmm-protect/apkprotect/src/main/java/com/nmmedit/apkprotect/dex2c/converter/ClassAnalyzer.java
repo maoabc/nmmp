@@ -48,7 +48,10 @@ public class ClassAnalyzer {
             allClasses.put(classDef.getType(), classDef);
         }
         //jna这个类有不少本地方法,不会被混淆,所以通过它是否存在来判断是否使用了jna
-        hasJna = allClasses.containsKey("Lcom/sun/jna/Native;");
+        //没发现jna相关类时,每次加载外部dex时判断,如果已经找到则不用再判断
+        if(!hasJna) {
+            hasJna = allClasses.containsKey("Lcom/sun/jna/Native;");
+        }
     }
 
     public boolean hasJnaLib() {
