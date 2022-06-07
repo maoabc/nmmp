@@ -663,6 +663,11 @@ SET_REGISTER_FLAGS(_idx, 0)
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
+        if(idx >= env->GetArrayLength(arrayObj)) {                          \
+            dvmThrowArrayIndexOutOfBoundsException(env,                     \
+                env->GetArrayLength(arrayObj), idx);                        \
+            GOTO_exceptionThrown();                                         \
+        }                                                                   \
         _setreg;                                                            \
         if (env->ExceptionCheck()) {                                        \
             GOTO_exceptionThrown();                                         \
@@ -687,6 +692,11 @@ SET_REGISTER_FLAGS(_idx, 0)
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
+        if(idx >= env->GetArrayLength(arrayObj)) {                          \
+            dvmThrowArrayIndexOutOfBoundsException(env,                     \
+                env->GetArrayLength(arrayObj), idx);                        \
+            GOTO_exceptionThrown();                                         \
+        }                                                                   \
         _setarray;                                                          \
         if (env->ExceptionCheck()) {                                        \
             GOTO_exceptionThrown();                                         \
