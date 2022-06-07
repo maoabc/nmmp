@@ -286,6 +286,15 @@ public class VmTest extends ArrayList {
     // android6的art或者jna
     public native static void callJnaPassStr();
 
+
+    //java运行抛数组越界异常
+    public static void agetOutOfBounds() {
+        final int[] ints = new int[2];
+
+        final int i = ints[3];
+    }
+
+    public native static void agetOutOfBounds0();
 }
 
 

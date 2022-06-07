@@ -1028,9 +1028,34 @@ JNIEXPORT void Java_com_nmmedit_vm_VmTest_callJnaPassStr
     //创建参数
     jstring arg = env->NewStringUTF("Hello world");
     jvalue args[1];
-    args[0].l=arg;
+    args[0].l = arg;
     //调用pass_str
     env->CallVoidMethodA(instance, passStrMethodId, args);
+}
+JNIEXPORT void Java_com_nmmedit_vm_VmTest_agetOutOfBounds0
+        (JNIEnv *env, jclass clazz) {
+
+    const DexCode *dexCode = findDexCode("Lcom/nmmedit/vm/VmTest;", "agetOutOfBounds");
+    if (dexCode == NULL) {
+        return;
+    }
+
+    u2 registersSize = dexCode->registersSize;
+
+    regptr_t *regs = (regptr_t *) calloc(registersSize, sizeof(regptr_t));
+    u1 *reg_flags = (u1 *) calloc(registersSize, sizeof(u1));
+
+    const u2 *insns = dexCode->insns;
+    u4 insnsSize = dexCode->insnsSize;
+    const vmCode code = {
+            .insns=insns,
+            .insnsSize=insnsSize,
+            .regs=regs,
+            .reg_flags=reg_flags,
+            .triesHandlers=NULL
+    };
+    jvalue value = vmInterpret(env, &code, &dvmResolver);
+
 }
 
 
