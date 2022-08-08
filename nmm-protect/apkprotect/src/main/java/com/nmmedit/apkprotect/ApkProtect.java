@@ -142,22 +142,18 @@ public class ApkProtect {
                 //add AndroidManifest.xml
                 addInputStreamToZip(zipOutput,
                         new ByteArrayInputStream(manifestBytes),
-                        new ZipEntry(ANDROID_MANIFEST_XML));
+                        ANDROID_MANIFEST_XML);
 
                 //add classesX.dex
                 for (File file : outDexFiles) {
-                    final ZipEntry zipEntry = new ZipEntry(file.getName());
-
-                    addFileToZip(zipOutput, file, zipEntry);
+                    addFileToZip(zipOutput, file, file.getName());
                 }
 
                 //add native libs
                 for (Map.Entry<String, List<File>> entry : nativeLibs.entrySet()) {
                     final String abi = entry.getKey();
                     for (File file : entry.getValue()) {
-                        final ZipEntry zipEntry = new ZipEntry("lib/" + abi + "/" + file.getName());
-
-                        addFileToZip(zipOutput, file, zipEntry);
+                        addFileToZip(zipOutput, file, "lib/" + abi + "/" + file.getName());
                     }
                 }
             }
@@ -167,7 +163,8 @@ public class ApkProtect {
         }
     }
 
-    private void addFileToZip(ZipOutputStream zipOutput, File file, ZipEntry zipEntry) throws IOException {
+    private void addFileToZip(ZipOutputStream zipOutput, File file, String entryName) throws IOException {
+        final ZipEntry zipEntry = new ZipEntry(entryName);
         zipOutput.putNextEntry(zipEntry);
         try (FileInputStream input = new FileInputStream(file);) {
             FileUtils.copyStream(input, zipOutput);
@@ -175,7 +172,8 @@ public class ApkProtect {
         zipOutput.closeEntry();
     }
 
-    private void addInputStreamToZip(ZipOutputStream zipOutput, InputStream inputStream, ZipEntry zipEntry) throws IOException {
+    private void addInputStreamToZip(ZipOutputStream zipOutput, InputStream inputStream, String entryName) throws IOException {
+        final ZipEntry zipEntry = new ZipEntry(entryName);
         zipOutput.putNextEntry(zipEntry);
         try {
             FileUtils.copyStream(inputStream, zipOutput);
@@ -581,7 +579,7 @@ public class ApkProtect {
 
             zipOutputStream.putNextEntry(newZipEntry);
 
-            copyStream(zipInputStream, zipOutputStream);
+            FileUtils.copyStream(zipInputStream, zipOutputStream);
 
             zipOutputStream.closeEntry();
         }
@@ -607,13 +605,6 @@ public class ApkProtect {
         return "L" + classDotName.replace('.', '/') + ";";
     }
 
-    private static void copyStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[4 * 1024];
-        int len;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
-        }
-    }
 
 
     public static class Builder {
