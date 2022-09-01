@@ -663,11 +663,6 @@ SET_REGISTER_FLAGS(_idx, 0)
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
-        if(idx >= env->GetArrayLength(arrayObj)) {                          \
-            dvmThrowArrayIndexOutOfBoundsException(env,                     \
-                env->GetArrayLength(arrayObj), idx);                        \
-            GOTO_exceptionThrown();                                         \
-        }                                                                   \
         _setreg;                                                            \
         if (env->ExceptionCheck()) {                                        \
             GOTO_exceptionThrown();                                         \
@@ -692,11 +687,6 @@ SET_REGISTER_FLAGS(_idx, 0)
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
-        if(idx >= env->GetArrayLength(arrayObj)) {                          \
-            dvmThrowArrayIndexOutOfBoundsException(env,                     \
-                env->GetArrayLength(arrayObj), idx);                        \
-            GOTO_exceptionThrown();                                         \
-        }                                                                   \
         _setarray;                                                          \
         if (env->ExceptionCheck()) {                                        \
             GOTO_exceptionThrown();                                         \
@@ -1904,6 +1894,11 @@ HANDLE_OP_IF_XXZ(OP_IF_LEZ, "lez", <=)
 
 /* File: c/OP_AGET.cpp */
 HANDLE_OP_AGET(OP_AGET, "", {
+    if (idx >= env->GetArrayLength(arrayObj)) {
+        dvmThrowArrayIndexOutOfBoundsException(env,
+                                               env->GetArrayLength(arrayObj), idx);
+        GOTO_exceptionThrown();
+    }
     u4 *arrData = (u4 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
     u4 val = arrData[idx];
     env->ReleasePrimitiveArrayCritical(arrayObj, arrData, JNI_ABORT);
@@ -1915,6 +1910,11 @@ HANDLE_OP_AGET(OP_AGET, "", {
 
 /* File: c/OP_AGET_WIDE.cpp */
 HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", {
+    if (idx >= env->GetArrayLength(arrayObj)) {
+        dvmThrowArrayIndexOutOfBoundsException(env,
+                                               env->GetArrayLength(arrayObj), idx);
+        GOTO_exceptionThrown();
+    }
     u8 *arrData = (u8 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
     u8 val = arrData[idx];
     env->ReleasePrimitiveArrayCritical(arrayObj, arrData, JNI_ABORT);
@@ -1986,6 +1986,11 @@ HANDLE_OP_AGET(OP_AGET_SHORT, "-short", {
 
 /* File: c/OP_APUT.cpp */
 HANDLE_OP_APUT(OP_APUT, "", {
+    if (idx >= env->GetArrayLength(arrayObj)) {
+        dvmThrowArrayIndexOutOfBoundsException(env,
+                                               env->GetArrayLength(arrayObj), idx);
+        GOTO_exceptionThrown();
+    }
     u4 *arrData = (u4 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
     arrData[idx] = GET_REGISTER(vdst);
     env->ReleasePrimitiveArrayCritical(arrayObj, arrData, 0);
@@ -1995,6 +2000,11 @@ HANDLE_OP_APUT(OP_APUT, "", {
 
 /* File: c/OP_APUT_WIDE.cpp */
 HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", {
+    if (idx >= env->GetArrayLength(arrayObj)) {
+        dvmThrowArrayIndexOutOfBoundsException(env,
+                                               env->GetArrayLength(arrayObj), idx);
+        GOTO_exceptionThrown();
+    }
     u8 *arrData = (u8 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
     arrData[idx] = GET_REGISTER_WIDE(vdst);
     env->ReleasePrimitiveArrayCritical(arrayObj, arrData, 0);
