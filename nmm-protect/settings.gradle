@@ -1,4 +1,5 @@
 rootProject.name = 'nmm-protect'
 include 'apkprotect'
 include 'arsc'
+include 'zipflinger'
 

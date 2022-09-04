@@ -1,5 +1,6 @@
 package com.nmmedit.apkprotect;
 
+import com.android.zipflinger.*;
 import com.nmmedit.apkprotect.andres.AxmlEdit;
 import com.nmmedit.apkprotect.data.Prefs;
 import com.nmmedit.apkprotect.dex2c.Dex2c;
@@ -27,9 +28,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ApkProtect {
@@ -133,33 +134,44 @@ public class ApkProtect {
             //替换为新的dex
             outDexFiles.set(0, newManDex);
 
+            final File outputApk = apkFolders.getOutputApk();
+            if (outputApk.exists()) {
+                outputApk.delete();
+            }
             try (
-                    final ZipInputStream zipInput = new ZipInputStream(new FileInputStream(apkFile));
-                    final ZipOutputStream zipOutput = new ZipOutputStream(new FileOutputStream(apkFolders.getOutputApk()));
+                    //输出的zip文件
+                    final ZipArchive zipArchive = new ZipArchive(outputApk.toPath());
             ) {
-                zipCopy(zipInput, zipOutput);
+                final ZipMap zipMap = ZipMap.from(apkFile.toPath());
+                //添加原apk不被修改的数据
+                final ZipSource zipSource = zipCopy(zipMap);
+                zipArchive.add(zipSource);
 
                 //add AndroidManifest.xml
-                addInputStreamToZip(zipOutput,
-                        new ByteArrayInputStream(manifestBytes),
-                        new ZipEntry(ANDROID_MANIFEST_XML));
+                final Source androidManifestSource = Sources.from(new ByteArrayInputStream(manifestBytes), ANDROID_MANIFEST_XML, Deflater.DEFAULT_COMPRESSION);
+                androidManifestSource.align(4);
+                zipArchive.add(androidManifestSource);
 
                 //add classesX.dex
                 for (File file : outDexFiles) {
-                    final ZipEntry zipEntry = new ZipEntry(file.getName());
-
-                    addFileToZip(zipOutput, file, zipEntry);
+                    final Source source = Sources.from(file, file.getName(), Deflater.DEFAULT_COMPRESSION);
+                    source.align(4);
+                    zipArchive.add(source);
                 }
 
                 //add native libs
                 for (Map.Entry<String, List<File>> entry : nativeLibs.entrySet()) {
                     final String abi = entry.getKey();
                     for (File file : entry.getValue()) {
-                        final ZipEntry zipEntry = new ZipEntry("lib/" + abi + "/" + file.getName());
-                        //todo 可能不需要压缩.so文件,同时保证.so文件4k对齐
-
-                        addFileToZip(zipOutput, file, zipEntry);
+                        //最小sdk如果不小于23,且AndroidManifest.xml里面没有android:extractNativeLibs="true", so不能压缩,且需要页对齐
+//                        final Source source = Sources.from(file, "lib/" + abi + "/" + file.getName(), Deflater.NO_COMPRESSION);
+//                        source.align(4*1024);
+                        //todo 增加处理不需要压缩的.so文件
+                        final Source source = Sources.from(file, "lib/" + abi + "/" + file.getName(), Deflater.DEFAULT_COMPRESSION);
+                        source.align(4);
+                        zipArchive.add(source);
                     }
+
                 }
             }
         } finally {
@@ -555,37 +567,22 @@ public class ApkProtect {
         return newFile;
     }
 
-    private static void zipCopy(ZipInputStream zipInputStream, ZipOutputStream zipOutputStream) throws IOException {
-        //从旧zip复制到新zip的文件
+    private static ZipSource zipCopy(ZipMap zipMap) {
         //忽略一些需要修改的文件
         final Pattern regex = Pattern.compile(
                 "classes(\\d)*\\.dex" +
                         "|META-INF/.*\\.(RSA|DSA|EC|SF|MF)" +
                         "|AndroidManifest\\.xml");
-        ZipEntry entry;
-        while ((entry = zipInputStream.getNextEntry()) != null) {
-            if (entry.isDirectory()
-                    || "".equals(entry.getName())) {
+        //处理后的zip数据
+        final ZipSource zipSource = new ZipSource(zipMap);
+        for (String entryName : zipMap.getEntries().keySet()) {
+            if (regex.matcher(entryName).matches()) {
                 continue;
             }
-            if (regex.matcher(entry.getName()).matches()) {
-                continue;
-            }
-
-            final ZipEntry newZipEntry = new ZipEntry(entry.getName());
-            if (entry.getMethod() == ZipEntry.STORED) {//不压缩只储存数据
-                newZipEntry.setMethod(ZipEntry.STORED);
-                newZipEntry.setCrc(entry.getCrc());
-                newZipEntry.setSize(entry.getSize());
-                newZipEntry.setCompressedSize(entry.getCompressedSize());
-            }
-
-            zipOutputStream.putNextEntry(newZipEntry);
-
-            FileUtils.copyStream(zipInputStream, zipOutputStream);
-
-            zipOutputStream.closeEntry();
+            //不改变压缩数据,4字节对齐
+            zipSource.select(entryName, entryName, ZipSource.COMPRESSION_NO_CHANGE, 4);
         }
+        return zipSource;
     }
 
     //递归删除目录
