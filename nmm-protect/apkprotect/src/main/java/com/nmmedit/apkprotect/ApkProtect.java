@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 public class ApkProtect {
 
@@ -144,8 +143,7 @@ public class ApkProtect {
             ) {
                 final ZipMap zipMap = ZipMap.from(apkFile.toPath());
                 //添加原apk不被修改的数据
-                final ZipSource zipSource = zipCopy(zipMap);
-                zipArchive.add(zipSource);
+                zipCopy(zipMap,zipArchive,ZipSource.COMPRESSION_NO_CHANGE);
 
                 //add AndroidManifest.xml
                 final Source androidManifestSource = Sources.from(new ByteArrayInputStream(manifestBytes), ANDROID_MANIFEST_XML, Deflater.DEFAULT_COMPRESSION);
@@ -178,24 +176,6 @@ public class ApkProtect {
             //删除解压缓存目录
             deleteFile(zipExtractDir);
         }
-    }
-
-    private void addFileToZip(ZipOutputStream zipOutput, File file, ZipEntry zipEntry) throws IOException {
-        zipOutput.putNextEntry(zipEntry);
-        try (FileInputStream input = new FileInputStream(file);) {
-            FileUtils.copyStream(input, zipOutput);
-        }
-        zipOutput.closeEntry();
-    }
-
-    private void addInputStreamToZip(ZipOutputStream zipOutput, InputStream inputStream, ZipEntry zipEntry) throws IOException {
-        zipOutput.putNextEntry(zipEntry);
-        try {
-            FileUtils.copyStream(inputStream, zipOutput);
-        } finally {
-            inputStream.close();
-        }
-        zipOutput.closeEntry();
     }
 
     private static Map<String, List<File>> generateNativeLibs(ApkFolders apkFolders) throws IOException {
@@ -567,7 +547,7 @@ public class ApkProtect {
         return newFile;
     }
 
-    private static ZipSource zipCopy(ZipMap zipMap) {
+    private static void zipCopy(ZipMap zipMap, ZipArchive outArchive, int compressionLevel) throws IOException {
         //忽略一些需要修改的文件
         final Pattern regex = Pattern.compile(
                 "classes(\\d)*\\.dex" +
@@ -581,8 +561,12 @@ public class ApkProtect {
             }
             //不改变压缩数据,4字节对齐
             zipSource.select(entryName, entryName, ZipSource.COMPRESSION_NO_CHANGE, 4);
+
+            //如果需要对apk尽可能压缩, 大概有两种优化:
+            //1. 增加压缩级别(需要改zipflinger),可以对需要压缩的文件重新使用zopfli的deflate算法进行极致压缩, https://github.com/eustas/CafeUndZopfli.git
+            //2. 对不能压缩的文件,其中如果是png图片使用其他png压缩工具, https://github.com/depsypher/pngtastic.git
         }
-        return zipSource;
+        outArchive.add(zipSource);
     }
 
     //递归删除目录
