@@ -38,4 +38,19 @@ public class FileUtils {
             out.write(buf, 0, len);
         }
     }
+    //递归删除目录
+    public static void deleteFile(File file) {
+        if (file == null) {
+            return;
+        }
+        if (file.isDirectory()) {
+            final File[] files = file.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    deleteFile(child);
+                }
+            }
+        }
+        file.delete();
+    }
 }

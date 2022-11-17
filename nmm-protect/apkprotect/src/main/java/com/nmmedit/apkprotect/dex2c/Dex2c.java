@@ -1,5 +1,6 @@
 package com.nmmedit.apkprotect.dex2c;
 
+import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
@@ -47,6 +48,10 @@ public class Dex2c {
 
         for (File file : dexFiles) {
             final DexConfig config = handleDex(file, filter, classAnalyzer, instructionRewriter, outDir);
+
+            //不需要给外部
+            config.setShellMethods(null);
+
             globalConfig.addDexConfig(config);
         }
         globalConfig.generateJniInitCode();
@@ -78,6 +83,7 @@ public class Dex2c {
                                       @Nonnull ClassAnalyzer classAnalyzer,
                                       @Nonnull InstructionRewriter instructionRewriter,
                                       @Nonnull File outDir) throws IOException {
+        if (!outDir.exists()) outDir.mkdirs();
         DexConfig config = splitDex(dex, dexFileName, filter, classAnalyzer, outDir);
 
 
@@ -121,6 +127,8 @@ public class Dex2c {
 
         final MethodConverter methodConverter = new MethodConverter(classAnalyzer);
 
+        HashMultimap<String, List<? extends Method>> shellMethods = HashMultimap.create();
+
         for (final ClassDef classDef : originDexFile.getClasses()) {
             if (filter.acceptClass(classDef)) {
                 final ArrayList<Method> shellDirectMethods = new ArrayList<>();
@@ -132,13 +140,17 @@ public class Dex2c {
                 // 处理所有需要转换的方法
                 for (Method method : classDef.getMethods()) {
                     if (filter.acceptMethod(method)
-                            // 有直接调用jna方法的指令,则不能进行native化
-                            // 感觉很少会发生,默认就把这个判断注释掉了,谁需要再去掉注释
+                        // 有直接调用jna方法的指令,则不能进行native化
+                        // 感觉很少会发生,默认就把这个判断注释掉了,谁需要再去掉注释
 //                            && !classAnalyzer.hasCallJnaMethod(method)
                     ) {
                         final Pair<List<? extends Method>, Method> pair = methodConverter.convert(method);
                         // 转换后可能出现变为多个方法
                         addMethods(shellDirectMethods, shellVirtualMethods, pair.first);
+
+                        //记录当前类，所有需要被修改的方法
+                        shellMethods.put(classDef.getType(), pair.first);
+
                         //只有一个具体实现
                         addMethod(implDirectMethods, implVirtualMethods, pair.second);
                     } else {
@@ -158,6 +170,7 @@ public class Dex2c {
         }
         DexConfig config = new DexConfig(outDir, dexFileName);
 
+        config.setShellMethods(shellMethods);
 
         //写入需要运行的dex
         shellDexPool.writeTo(new FileDataStore(config.getShellDexFile()));

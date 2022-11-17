@@ -122,7 +122,9 @@ public class ApkProtect {
                     apkFolders.getTempDexDir());
 
 
-            final Map<String, List<File>> nativeLibs = generateNativeLibs(apkFolders);
+            final List<String> abis = getAbis(apkFile);
+
+            final Map<String, List<File>> nativeLibs = generateNativeLibs(apkFolders, abis);
 
             File mainDex = outDexFiles.get(0);
 
@@ -143,7 +145,7 @@ public class ApkProtect {
             ) {
                 final ZipMap zipMap = ZipMap.from(apkFile.toPath());
                 //添加原apk不被修改的数据
-                zipCopy(zipMap,zipArchive,ZipSource.COMPRESSION_NO_CHANGE);
+                zipCopy(zipMap, zipArchive, ZipSource.COMPRESSION_NO_CHANGE);
 
                 //add AndroidManifest.xml
                 final Source androidManifestSource = Sources.from(new ByteArrayInputStream(manifestBytes), ANDROID_MANIFEST_XML, Deflater.DEFAULT_COMPRESSION);
@@ -174,11 +176,12 @@ public class ApkProtect {
             }
         } finally {
             //删除解压缓存目录
-            deleteFile(zipExtractDir);
+            FileUtils.deleteFile(zipExtractDir);
         }
     }
 
-    private static Map<String, List<File>> generateNativeLibs(ApkFolders apkFolders) throws IOException {
+    public static Map<String, List<File>> generateNativeLibs(@Nonnull ApkFolders apkFolders,
+                                                             @Nonnull final List<String> abis) throws IOException {
         String cmakePath = System.getenv("CMAKE_PATH");
         if (isEmpty(cmakePath)) {
             System.err.println("No CMAKE_PATH");
@@ -196,11 +199,9 @@ public class ApkProtect {
         }
 
         final File outRootDir = apkFolders.getOutRootDir();
-        final File apkFile = apkFolders.getInApk();
 
         final Map<String, List<File>> allLibs = new HashMap<>();
 
-        final List<String> abis = getAbis(apkFile);
         for (String abi : abis) {
             final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
                     sdkHome,
@@ -210,7 +211,7 @@ public class ApkProtect {
                     abi);
 
             //删除上次创建的目录
-            deleteFile(new File(cmakeOptions.getBuildPath()));
+            FileUtils.deleteFile(new File(cmakeOptions.getBuildPath()));
 
             final List<File> files = BuildNativeLib.build(cmakeOptions);
             allLibs.put(abi, files);
@@ -219,8 +220,8 @@ public class ApkProtect {
 
     }
 
-    private static boolean isEmpty(String cmakePath) {
-        return cmakePath == null || "".equals(cmakePath);
+    private static boolean isEmpty(String s) {
+        return s == null || "".equals(s);
     }
 
     //根据apk里文件得到abi，如果没有本地库则返回所有
@@ -313,7 +314,7 @@ public class ApkProtect {
     }
 
     //根据指令重写规则,重新生成新的opcode
-    private static void writeOpcodeHeaderFile(File source, InstructionRewriter instructionRewriter) throws IOException {
+    public static void writeOpcodeHeaderFile(File source, InstructionRewriter instructionRewriter) throws IOException {
         final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(source), StandardCharsets.UTF_8));
 
@@ -361,7 +362,7 @@ public class ApkProtect {
     }
 
 
-    private static void writeCmakeFile(File cmakeTemp, String libName) throws IOException {
+    public static void writeCmakeFile(File cmakeTemp, String libName) throws IOException {
         final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(cmakeTemp), StandardCharsets.UTF_8));
 
@@ -569,21 +570,6 @@ public class ApkProtect {
         outArchive.add(zipSource);
     }
 
-    //递归删除目录
-    private static void deleteFile(File file) {
-        if (file == null) {
-            return;
-        }
-        if (file.isDirectory()) {
-            final File[] files = file.listFiles();
-            if (files != null) {
-                for (File child : files) {
-                    deleteFile(child);
-                }
-            }
-        }
-        file.delete();
-    }
 
     private static String classDotNameToType(String classDotName) {
         return "L" + classDotName.replace('.', '/') + ";";

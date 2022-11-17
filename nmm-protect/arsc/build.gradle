@@ -23,9 +23,9 @@ java {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    annotationProcessor 'com.google.auto.value:auto-value:1.8.1'
-    compileOnly 'com.google.auto.value:auto-value-annotations:1.8.1'
-    implementation 'com.google.guava:guava:30.1.1-android'
+    annotationProcessor 'com.google.auto.value:auto-value:1.10'
+    compileOnly 'com.google.auto.value:auto-value-annotations:1.10'
+    implementation 'com.google.guava:guava:31.1-jre'
 
     testImplementation 'junit:junit:4.13.2'
 }

@@ -140,6 +140,6 @@ public abstract class Source {
     }
 
     static String directoryName(@Nonnull String name) {
-        return name += DIRECTORY_MARKER;
+        return name + DIRECTORY_MARKER;
     }
 }

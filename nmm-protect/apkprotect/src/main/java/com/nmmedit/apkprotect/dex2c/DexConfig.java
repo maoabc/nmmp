@@ -1,9 +1,12 @@
 package com.nmmedit.apkprotect.dex2c;
 
+import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
+import org.jf.dexlib2.iface.Method;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +16,10 @@ import java.util.Set;
 public class DexConfig {
     private final File outputDir;
     private final String dexName;
+
+    //记录壳dex被处理过的类及处理后的方法, 因为可能新增方法所以壳dex方法跟需要转换的dex并不相等
+    //单独记录下来,主要后面交给java-asm处理转换前的class文件
+    private HashMultimap<String, List<? extends Method>> shellMethods;
 
     //jnicodegenerator 处理完成后,缓存已处理的类及方法
     private Set<String> handledNativeClasses;
@@ -57,6 +64,15 @@ public class DexConfig {
     public void setResult(JniCodeGenerator codeGenerator) {
         handledNativeClasses = codeGenerator.getHandledNativeClasses();
         nativeMethodOffsets = codeGenerator.getNativeMethodOffsets();
+    }
+
+
+    public void setShellMethods(HashMultimap<String, List<? extends Method>> shellMethods) {
+        this.shellMethods = shellMethods;
+    }
+
+    public HashMultimap<String, List<? extends Method>> getShellMethods() {
+        return shellMethods;
     }
 
     /**
