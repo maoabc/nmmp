@@ -100,5 +100,9 @@ typedef struct {
 ```
 vmCode提供执行所需要的指令、异常表及寄存器空间，vmResolver包含一组函数指针，提供运行时的符号，比如field，method等。通过自定义这两个参数来实现不同的加固方式，比如项目里的test.cpp有一个简单的基于libdex实现的vmResolver，它主要用于开发测试。而nmm-protect实现的是把.dex相关数据转换为c结构体，还包含了opcode随机化等，基本可实际使用。
 
+# aar模块加固
+目前已实现模块相关加固，用法同apk加固类似，如果有问题可以提issue。
+
+
 # Licences
 nmm-protect 以gpl协议发布,[nmm-protect licence](https://github.com/maoabc/nmmp/blob/master/nmm-protect/LICENSE), dex-vm部分以Apache协议发布, [nmmvm licence](https://github.com/maoabc/nmmp/blob/master/nmmvm/LICENSE). 只有vm部分会打包进apk中, nmm-protect只是转换dex,协议不影响生成的结果.
