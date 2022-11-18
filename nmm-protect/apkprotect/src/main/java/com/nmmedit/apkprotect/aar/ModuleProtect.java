@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.ApkProtect;
 import com.nmmedit.apkprotect.BuildNativeLib;
 import com.nmmedit.apkprotect.aar.asm.AsmMethod;
+import com.nmmedit.apkprotect.aar.asm.AsmUtils;
 import com.nmmedit.apkprotect.aar.asm.InjectStaticBlockVisitor;
 import com.nmmedit.apkprotect.aar.asm.MethodToNativeVisitor;
 import com.nmmedit.apkprotect.dex2c.Dex2c;
@@ -77,15 +78,14 @@ public class ModuleProtect {
             final ZipMap zipMap = ZipMap.from(aar.toPath());
             final ZipSource zipSource = new ZipSource(zipMap);
 
-            final File outputAar = aarFolders.getOutputAar();
-            if (outputAar.exists()) FileUtils.deleteFile(outputAar);
+            final File outputAarFile = aarFolders.getOutputAar();
+            if (outputAarFile.exists()) FileUtils.deleteFile(outputAarFile);
 
             try (
-                    final ZipRepo zipRepo = new ZipRepo(zipMap);
-                    final ZipArchive outAar = new ZipArchive(outputAar.toPath());
+                    final ZipArchive outAar = new ZipArchive(outputAarFile.toPath());
             ) {
 
-                for (Map.Entry<String, Entry> entry : zipRepo.getEntries().entrySet()) {
+                for (Map.Entry<String, Entry> entry : zipMap.getEntries().entrySet()) {
                     final String name = entry.getKey();
                     if ("classes.jar".equals(name)) {//不需要原来aar中的classes.jar
                         continue;
@@ -163,6 +163,12 @@ public class ModuleProtect {
                 zipSource.select(name, name);
             }
             outZip.add(zipSource);
+
+            //生成NativeUtil,添加进jar
+            final byte[] bytes = AsmUtils.genCfNativeUtil(dexConfig.getRegisterNativesClassName(),
+                    BuildNativeLib.NMMP_NAME,
+                    Collections.singletonList(dexConfig.getRegisterNativesMethodName()));
+            outZip.add(new BytesSource(bytes, dexConfig.getRegisterNativesClassName() + ".class", Deflater.DEFAULT_COMPRESSION));
         }
         return outClassJar;
     }
