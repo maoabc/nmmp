@@ -185,14 +185,14 @@ public class ModuleProtect {
             }
             final Method method = methods.get(0);
             final String sig = MyMethodUtil.getMethodSignature(method.getParameterTypes(), method.getReturnType());
-            final AsmMethod asmMethod = new AsmMethod(method.getName(), sig);
+            final AsmMethod asmMethod = new AsmMethod(method.getAccessFlags(), method.getName(), sig);
 
             if (methods.size() == 1) {
                 myMethods.put(asmMethod, Collections.singletonList(asmMethod));
             } else if (methods.size() == 2) {
                 final Method method1 = methods.get(1);
                 final String sig1 = MyMethodUtil.getMethodSignature(method1.getParameterTypes(), method1.getReturnType());
-                final AsmMethod asmMethod1 = new AsmMethod(method1.getName(), sig1);
+                final AsmMethod asmMethod1 = new AsmMethod(method1.getAccessFlags(), method1.getName(), sig1);
 
                 myMethods.put(asmMethod, Arrays.asList(asmMethod, asmMethod1));
             }

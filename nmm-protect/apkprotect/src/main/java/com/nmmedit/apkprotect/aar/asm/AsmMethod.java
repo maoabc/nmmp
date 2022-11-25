@@ -1,10 +1,12 @@
 package com.nmmedit.apkprotect.aar.asm;
 
 public class AsmMethod {
-    private final String name;
-    private final String descriptor;
+    public final int access;
+    public final String name;
+    public final String descriptor;
 
-    public AsmMethod(String name, String descriptor) {
+    public AsmMethod(int access, String name, String descriptor) {
+        this.access = access;
         this.name = name;
         this.descriptor = descriptor;
     }
