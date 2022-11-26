@@ -22,10 +22,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.zip.Deflater;
 
@@ -48,6 +45,10 @@ public class ModuleProtect {
     }
 
     public void run() throws IOException {
+        final File aar = aarFolders.getAar();
+        if (!aar.exists()) {
+            throw new FileNotFoundException(aar.getAbsolutePath());
+        }
         final File dexJar = classesJarToDexJar();
 
         final File zipExtractTempDir = aarFolders.apkFolders.getZipExtractTempDir();
@@ -61,7 +62,7 @@ public class ModuleProtect {
             classAnalyzer.loadDexFile(classesDex);
 
 
-            final DexConfig dexConfig = Dex2c.handleDex(classesDex,
+            final DexConfig dexConfig = Dex2c.handleModuleDex(classesDex,
                     filter,
                     classAnalyzer,
                     instructionRewriter,
@@ -74,7 +75,6 @@ public class ModuleProtect {
             final Map<String, List<File>> nativeLibs = ApkProtect.generateNativeLibs(aarFolders.apkFolders,
                     getAbis());
 
-            final File aar = aarFolders.getAar();
             final ZipMap zipMap = ZipMap.from(aar.toPath());
             final ZipSource zipSource = new ZipSource(zipMap);
 

@@ -7,6 +7,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 public class AsmUtilsTest {
 
@@ -30,5 +32,13 @@ public class AsmUtilsTest {
             FileUtils.copyStream(new ByteArrayInputStream(cw.toByteArray()), out);
         }
 
+    }
+
+    @Test
+    public void testGenCf() throws IOException {
+        final byte[] bytes = AsmUtils.genCfNativeUtil("com/nmmp/NativeUtil", "nmmp", Arrays.asList("classInit0", "classInit1"));
+        final File file = new File("/home/mao/adbi/TestNative.class");
+
+        Files.write(file.toPath(),bytes);
     }
 }

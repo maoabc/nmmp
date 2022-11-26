@@ -74,6 +74,19 @@ public class Dex2c {
                 outDir);
     }
 
+    public static DexConfig handleModuleDex(@Nonnull File dexFile,
+                                            @Nonnull ClassAndMethodFilter filter,
+                                            @Nonnull ClassAnalyzer classAnalyzer,
+                                            @Nonnull InstructionRewriter instructionRewriter,
+                                            @Nonnull File outDir) throws IOException {
+        final GlobalDexConfig globalDexConfig = new GlobalDexConfig(outDir);
+        final DexConfig dexConfig = handleDex(dexFile, filter, classAnalyzer, instructionRewriter, outDir);
+        globalDexConfig.addDexConfig(dexConfig);
+
+        globalDexConfig.generateJniInitCode();
+        return dexConfig;
+    }
+
     /**
      * 处理单个dex流
      */
