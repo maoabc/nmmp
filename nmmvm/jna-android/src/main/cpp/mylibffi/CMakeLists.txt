@@ -73,6 +73,8 @@ else ()
     message(FATAL_ERROR "unknown arch")
 endif ()
 
+#debug include dirs
+#message(FATAL_ERROR "${ANDROID_ABI}   ${LIBFFI_INCLUDES}")
 
 configure_file(libffi/include/ffi.h.in ${out}/ffi.h @ONLY)
 
@@ -81,7 +83,7 @@ add_library(ffi_static STATIC ${LIB_FFI_SRCS} ${ARCH_SRCS})
 
 
 target_include_directories(ffi_static PUBLIC ${LIBFFI_INCLUDES}
-        PRAVITE ${INCLUDE_DIRS})
+        ${INCLUDE_DIRS})
 
 target_link_libraries(ffi_static)
 
