@@ -42,14 +42,14 @@ if (${ANDROID_ABI} STREQUAL "arm64-v8a")
             libffi/src/aarch64/sysv.S
             libffi/src/aarch64/ffi.c
             )
-    set(LIBFFI_INCLUDES libffi/src/aarch64)
+    set(LIBFFI_INCLUDES libffi/src/aarch64 myconfig/aarch64)
 elseif (${ANDROID_ABI} STREQUAL "armeabi-v7a")
     set(TARGET ARM)
     set(ARCH_SRCS
             libffi/src/arm/sysv.S
             libffi/src/arm/ffi.c
             )
-    set(LIBFFI_INCLUDES libffi/src/arm)
+    set(LIBFFI_INCLUDES libffi/src/arm myconfig/arm)
 
 elseif (${ANDROID_ABI} STREQUAL "x86")
     set(TARGET X86)
@@ -58,7 +58,7 @@ elseif (${ANDROID_ABI} STREQUAL "x86")
             libffi/src/x86/ffi.c
             )
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -DHAVE_AS_X86_PCREL -DHAVE_AS_ASCII_PSEUDO_OP")
-    set(LIBFFI_INCLUDES libffi/src/x86)
+    set(LIBFFI_INCLUDES libffi/src/x86 myconfig/x86)
 elseif (${ANDROID_ABI} STREQUAL "x86_64")
     set(TARGET X86_64)
     set(ARCH_SRCS
@@ -68,7 +68,7 @@ elseif (${ANDROID_ABI} STREQUAL "x86_64")
             libffi/src/x86/win64.S
             )
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -DHAVE_AS_X86_PCREL -DHAVE_AS_ASCII_PSEUDO_OP")
-    set(LIBFFI_INCLUDES libffi/src/x86)
+    set(LIBFFI_INCLUDES libffi/src/x86 myconfig/x86)
 else ()
     message(FATAL_ERROR "unknown arch")
 endif ()
