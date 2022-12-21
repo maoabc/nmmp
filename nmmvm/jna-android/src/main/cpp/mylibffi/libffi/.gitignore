@@ -15,7 +15,7 @@ depcomp
 doc/libffi.info
 *~
 fficonfig.h.in
-fficonfig.h
+#fficonfig.h
 include/ffi.h
 include/ffitarget.h
 install-sh
