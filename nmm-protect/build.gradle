@@ -10,7 +10,13 @@ repositories {
     google()
 }
 
+static def getDate() {
+    return new Date().format('yyyy-MM-dd-HHmm')
+}
+
 jar {
+    archiveBaseName = "vm-protect"
+    archiveVersion = getDate()
     manifest {
         attributes(
                 'Main-Class': 'com.nmmedit.protect.Main'
