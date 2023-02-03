@@ -17,7 +17,7 @@ public class AsmUtilsTest {
     public void testInjectStaticBlock() throws IOException {
         final InputStream t1 = getClass().getResourceAsStream("/test2_class");
         final ClassReader cls1 = new ClassReader(t1);
-        final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS );
 
         InjectStaticBlockVisitor cv = new InjectStaticBlockVisitor(Opcodes.ASM9, cw,
                 "com/nmmp/NativeUtils", "classInit0", 5);

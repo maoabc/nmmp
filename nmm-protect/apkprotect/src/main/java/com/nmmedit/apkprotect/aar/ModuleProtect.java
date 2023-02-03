@@ -197,7 +197,7 @@ public class ModuleProtect {
                 myMethods.put(asmMethod, Arrays.asList(asmMethod, asmMethod1));
             }
         }
-        final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         final MethodToNativeVisitor methodToNativeVisitor = new MethodToNativeVisitor(Opcodes.ASM9, cw, myMethods);
 
         final InjectStaticBlockVisitor visitor = new InjectStaticBlockVisitor(Opcodes.ASM9, methodToNativeVisitor,
