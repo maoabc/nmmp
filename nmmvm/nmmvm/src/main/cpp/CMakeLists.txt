@@ -8,7 +8,6 @@ add_subdirectory(libdex)
 #测试
 
 include_directories(.)
-include_directories(./vm/include)
 include_directories(test)
 include_directories(custom)
 
@@ -36,7 +35,7 @@ endif ()
 add_library(nmmp SHARED ConstantPool.c ${TEST_SRC})
 
 
-target_link_libraries(nmmp nmmvm dex log)
+target_link_libraries(nmmp ${LIBNMMVM_NAME} dex log)
 
 
 add_library(test-jna SHARED test_jna.c)

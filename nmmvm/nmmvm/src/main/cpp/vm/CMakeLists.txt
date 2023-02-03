@@ -16,10 +16,14 @@ set(VM_SRC_FILES
         )
 
 
-
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLOG_INSTR ")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fvisibility=hidden -DNDEBUG")
 
-add_library(nmmvm SHARED ${VM_SRC_FILES})
+#设置vm库名称
+set(LIBNMMVM_NAME "nmmvm" CACHE INTERNAL "lib nmmvm name")
 
-target_link_libraries(nmmvm log)
+
+add_library(${LIBNMMVM_NAME} SHARED ${VM_SRC_FILES})
+
+target_link_libraries(${LIBNMMVM_NAME} log)
+target_include_directories(${LIBNMMVM_NAME} PUBLIC include)
