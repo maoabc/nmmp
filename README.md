@@ -22,7 +22,7 @@ java -jar nmm-protect-xxx.jar input.apk
 执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等。  
 第一次运行后会在jar位置生成tools目录，里面有config.json可以编辑它配置安卓sdk，ndk相关路径。
 
-生成的apk需要使用zipalign对齐及apksigner签名才能安装使用
+生成的apk需要使用zipalign对齐（新版本已使用zipflinger处理apk,可以不用进行zipalign）及apksigner签名才能安装使用
 ``` bash
 zipalign 4 build/input-protect.apk build/input-protect-align.apk
 apksigner sign --ks ~/.myapp.jks build/input-protect-align.apk
