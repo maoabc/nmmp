@@ -9,7 +9,7 @@
 
 例子在linux环境下测试的，windows也应该没问题,先安装好JDK及android sdk和ndk。(windows下apk资源复制可能出问题，如果遇到可以手动处理，复制旧apk里的res到加固后的apk)
 
-下载[nmm-protect-1.2.jar](https://github.com/maoabc/nmmp/releases/download/1.2/nmm-protect-1.2-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
+下载[vm-protect.jar](https://github.com/maoabc/nmmp/releases/download/20230203/vm-protect-2023-02-03-1445.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
