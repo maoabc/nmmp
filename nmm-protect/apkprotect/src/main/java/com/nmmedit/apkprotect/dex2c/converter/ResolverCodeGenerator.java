@@ -79,6 +79,9 @@ public class ResolverCodeGenerator {
 
     private void generateResolver(Writer writer) throws IOException {
         writer.write("static void resolver_init(JNIEnv *env) {\n" +
+                "    if(sizeof(gFields) == 0) return;\n" +
+                "    if(sizeof(gMethods) == 0) return;\n" +
+                "    if(sizeof(gStringConstants) == 0) return;\n" +
                 "    memset(gFields, 0, sizeof(gFields));\n" +
                 "    memset(gMethods, 0, sizeof(gMethods));\n" +
                 "    memset(gStringConstants, 0, sizeof(gStringConstants));\n" +
