@@ -714,7 +714,7 @@ public abstract class InstructionRewriter {
             case SGET_CHAR:
             case SGET_SHORT:
             case SGET_WIDE:
-            case SGET_OBJECT:
+            case SGET_OBJECT: {
                 //修复接口中静态域访问问题
                 final FieldReference reference = (FieldReference) referenceInstruction.getReference();
                 final FieldReference newFieldRef = classAnalyzer.getDirectFieldRef(reference);
@@ -722,10 +722,12 @@ public abstract class InstructionRewriter {
                     return getReferenceIndex(referenceInstruction.getReferenceType(), newFieldRef);
                 }
                 break;
+            }
             case CONST_STRING:
-            case CONST_STRING_JUMBO:
-                //todo 直接从constStringPool中得到索引，这样生成c代码时可以去掉二分法
-                break;
+            case CONST_STRING_JUMBO: {
+                //重写const-string idx
+                return references.getConstStringItemIndex(((StringReference) referenceInstruction.getReference()).getString());
+            }
         }
         return getReferenceIndex(referenceInstruction.getReferenceType(),
                 referenceInstruction.getReference());
