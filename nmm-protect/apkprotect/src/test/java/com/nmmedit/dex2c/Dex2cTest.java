@@ -75,8 +75,11 @@ public class Dex2cTest {
             }
         }
 
-        dexPool.writeTo(new FileDataStore(new File("/home/mao/nmmp/classes2.dex")));
-        dexPoolMethodIml.writeTo(new FileDataStore(new File("/home/mao/nmmp/sym.dat")));
+        //需要看输出文件可以自己制定目录
+        File outdir = File.createTempFile("mytest", "dex2c-dir");
+        if(!outdir.exists()) outdir.mkdirs();
+        dexPool.writeTo(new FileDataStore(new File(outdir,"classes2.dex")));
+        dexPoolMethodIml.writeTo(new FileDataStore(new File(outdir,"sym.dat")));
 
     }
 

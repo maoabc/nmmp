@@ -9,7 +9,7 @@
 
 例子在linux环境下测试的，windows也应该没问题,先安装好JDK及android sdk和ndk。(windows下apk资源复制可能出问题，如果遇到可以手动处理，复制旧apk里的res到加固后的apk)
 
-下载[nmm-protect-1.2.jar](https://github.com/maoabc/nmmp/releases/download/1.2/nmm-protect-1.2-SNAPSHOT.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
+下载[vm-protect.jar](https://github.com/maoabc/nmmp/releases/download/20230203/vm-protect-2023-02-03-1445.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
 export ANDROID_SDK_HOME=/opt/android-sdk
 export ANDROID_NDK_HOME=/opt/android-sdk/ndk/22.1.7171670
@@ -22,7 +22,7 @@ java -jar nmm-protect-xxx.jar input.apk
 执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等。  
 第一次运行后会在jar位置生成tools目录，里面有config.json可以编辑它配置安卓sdk，ndk相关路径。
 
-生成的apk需要使用zipalign对齐及apksigner签名才能安装使用
+生成的apk需要使用zipalign对齐（新版本已使用zipflinger处理apk,可以不用进行zipalign）及apksigner签名才能安装使用
 ``` bash
 zipalign 4 build/input-protect.apk build/input-protect-align.apk
 apksigner sign --ks ~/.myapp.jks build/input-protect-align.apk
