@@ -1,5 +1,33 @@
+
+
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.13"
+    }
+}
+
 plugins {
     id 'java'
+}
+apply plugin: "com.google.protobuf"
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.19.2"
+    }
+}
+sourceSets {
+    main.java {
+        srcDir "build/generated/source/proto/main/java"
+    }
 }
 
 task sourceJar(type: Jar) {
@@ -31,10 +59,10 @@ dependencies {
 
     implementation 'org.ow2.asm:asm:9.4'
 
-//    implementation 'com.android.tools:r8:3.3.75'
-    implementation 'com.android.tools:r8:3.3.75'
+    implementation 'com.android.tools:r8:4.0.63'
 
 
+    implementation "com.google.protobuf:protobuf-java:3.22.2"
 
     implementation "com.android:zipflinger:7.3.1"
 //    implementation project(':zipflinger')

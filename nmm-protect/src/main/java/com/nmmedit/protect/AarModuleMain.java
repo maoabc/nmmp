@@ -1,7 +1,7 @@
 package com.nmmedit.protect;
 
 import com.nmmedit.apkprotect.aar.AarFolders;
-import com.nmmedit.apkprotect.aar.ModuleProtect;
+import com.nmmedit.apkprotect.aar.AarProtect;
 import com.nmmedit.apkprotect.deobfus.MappingReader;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.RandomInstructionRewriter;
@@ -15,7 +15,7 @@ public class AarModuleMain {
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("No Input aar.");
-            System.err.println("<inAar> [<convertRuleFile> [mapping.txt]]");
+            System.err.println("<inAar> [<convertRuleFile> mapping.txt]");
             System.exit(-1);
         }
         final File aar = new File(args[0]);
@@ -43,11 +43,11 @@ public class AarModuleMain {
 
         final AarFolders aarFolders = new AarFolders(aar, outDir);
 
-        final ModuleProtect moduleProtect = new ModuleProtect.Builder(aarFolders)
+        final AarProtect aarProtect = new AarProtect.Builder(aarFolders)
                 .setInstructionRewriter(new RandomInstructionRewriter())
                 .setFilter(filterConfig)
                 .setClassAnalyzer(classAnalyzer)
                 .build();
-        moduleProtect.run();
+        aarProtect.run();
     }
 }

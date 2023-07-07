@@ -1,0 +1,357 @@
+syntax = "proto3";
+
+package android.bundle;
+
+import "config.proto";
+import "targeting.proto";
+
+option java_package = "com.android.bundle";
+
+// Describes the output of the "build-apks" command.
+message BuildApksResult {
+  // The package name of this app.
+  string package_name = 4;
+
+  // List of the created variants.
+  repeated Variant variant = 1;
+
+  // Metadata about BundleTool used to build the APKs.
+  Bundletool bundletool = 2;
+
+  // List of the created asset slices.
+  repeated AssetSliceSet asset_slice_set = 3;
+
+  // Information about local testing mode.
+  LocalTestingInfo local_testing_info = 5;
+
+  // Asset modules metadata for asset only bundles.
+  AssetModulesInfo asset_modules_info = 6;
+
+  // Default values for targeting dimensions, as specified in the BundleConfig.
+  // Only set for dimensions that have a default suffix specified.
+  repeated DefaultTargetingValue default_targeting_value = 7;
+
+  // Information about permanently fused install-time modules, which were
+  // presented in original bundle but fused into base in all variants.
+  repeated PermanentlyFusedModule permanently_fused_modules = 8;
+}
+
+message BuildSdkApksResult {
+  // The package name of the SDK.
+  //
+  // For instance, for SDK “com.foo.bar” with major version “15”,
+  // the package name stored here is simply “com.foo.bar”.
+  // This is different from the package name that is installed in Android
+  // PackageManager on sandbox-enabled devices (which is “com.foo.bar_15”).
+  string package_name = 1;
+
+  // Variants generated for the SDK.
+  // At the moment, there is always a single variant.
+  repeated Variant variant = 2;
+
+  Bundletool bundletool = 3;
+
+  SdkVersionInformation version = 4;
+}
+
+message SdkVersionInformation {
+  // Major version of the SDK.
+  int32 major = 1;
+
+  // Minor version of the SDK.
+  int32 minor = 2;
+
+  // Patch version of the SDK.
+  int32 patch = 3;
+
+  // A unique version code assigned to the SDK by the caller of build-sdk-apks.
+  int32 version_code = 4;
+}
+
+// Variant is a group of APKs that covers a part of the device configuration
+// space. APKs from multiple variants are never combined on one device.
+message Variant {
+  // Variant-level targeting.
+  // This targeting is fairly high-level and each APK has its own targeting as
+  // well.
+  VariantTargeting targeting = 1;
+
+  // Set of APKs, one set per module.
+  repeated ApkSet apk_set = 2;
+
+  // Number of the variant, starting at 0 (unless overridden).
+  // A device will receive APKs from the first variant that matches the device
+  // configuration, with higher variant numbers having priority over lower
+  // variant numbers.
+  uint32 variant_number = 3;
+
+  // Extra information about the variant e.g. has uncompressed dex files or
+  // uncompressed native libraries
+  VariantProperties variant_properties = 4;
+}
+
+// Describes properties of a variant
+message VariantProperties {
+  // Variant has uncompressed dex files
+  bool uncompressed_dex = 1;
+
+  // Variant has uncompressed native libraries
+  bool uncompressed_native_libraries = 2;
+
+  // Variant has sparse encoded resource tables
+  bool sparse_encoding = 3;
+}
+
+// Describes the output of the "extract-apks" command.
+message ExtractApksResult {
+  // Set of  extracted APKs.
+  repeated ExtractedApk apks = 1;
+
+  // Information about the APKs if built with local testing enabled.
+  LocalTestingInfoForMetadata local_testing_info = 2;
+}
+
+message LocalTestingInfoForMetadata {
+  // The absolute path on the device that files targeted by local testing
+  // mode will be pushed to.
+  string local_testing_dir = 1;
+}
+
+// Describes extracted APK.
+message ExtractedApk {
+  // Module name.
+  string module_name = 1;
+
+  // Path
+  string path = 2;
+
+  // Indicates the delivery type (e.g. on-demand) of the APK.
+  DeliveryType delivery_type = 3;
+}
+
+// Represents a module.
+// For pre-L devices multiple modules (possibly all) may be merged into one.
+message ApkSet {
+  ModuleMetadata module_metadata = 1;
+
+  // APKs.
+  repeated ApkDescription apk_description = 2;
+}
+
+message ModuleMetadata {
+  // Module name.
+  string name = 1;
+
+  // Indicates the type of this feature module.
+  FeatureModuleType module_type = 7;
+
+  // Indicates the delivery type (e.g. on-demand) of the module.
+  DeliveryType delivery_type = 6;
+
+  // Indicates whether this module is marked "instant".
+  bool is_instant = 3;
+
+  // Names of the modules that this module directly depends on.
+  // Each module implicitly depends on the base module.
+  repeated string dependencies = 4;
+
+  // The targeting that makes a conditional module installed.
+  // Relevant only for Split APKs.
+  ModuleTargeting targeting = 5;
+
+  // Deprecated. Please use delivery_type.
+  bool on_demand_deprecated = 2 [deprecated = true];
+
+  // Runtime-enabled SDK dependencies of this module.
+  repeated RuntimeEnabledSdkDependency runtime_enabled_sdk_dependencies = 8;
+
+  // Information about the SDK that this module was generated from.
+  // Only set for modules with module_type FeatureModuleType.SDK_MODULE.
+  optional SdkModuleMetadata sdk_module_metadata = 9;
+}
+
+// Set of asset slices belonging to a single asset module.
+message AssetSliceSet {
+  // Module level metadata.
+  AssetModuleMetadata asset_module_metadata = 1;
+
+  // Asset slices.
+  repeated ApkDescription apk_description = 2;
+}
+
+message AssetModuleMetadata {
+  // Module name.
+  string name = 1;
+
+  // Indicates the delivery type for persistent install.
+  DeliveryType delivery_type = 4;
+
+  // Metadata for instant installs.
+  InstantMetadata instant_metadata = 3;
+
+  // Deprecated. Use delivery_type.
+  bool on_demand_deprecated = 2 [deprecated = true];
+}
+
+message InstantMetadata {
+  // Indicates whether this module is marked "instant".
+  bool is_instant = 1;
+
+  // Indicates the delivery type for instant install.
+  DeliveryType delivery_type = 3;
+
+  // Deprecated. Use delivery_type.
+  bool on_demand_deprecated = 2 [deprecated = true];
+}
+
+enum DeliveryType {
+  UNKNOWN_DELIVERY_TYPE = 0;
+  INSTALL_TIME = 1;
+  ON_DEMAND = 2;
+  FAST_FOLLOW = 3;
+}
+
+enum FeatureModuleType {
+  UNKNOWN_MODULE_TYPE = 0;
+  FEATURE_MODULE = 1;
+  ML_MODULE = 2;
+  SDK_MODULE = 3;
+}
+
+message ApkDescription {
+  ApkTargeting targeting = 1;
+
+  // Path to the APK file.
+  string path = 2;
+
+  oneof apk_metadata_oneof_value {
+    // Set only for Split APKs.
+    SplitApkMetadata split_apk_metadata = 3;
+    // Set only for standalone APKs.
+    StandaloneApkMetadata standalone_apk_metadata = 4;
+    // Set only for Instant split APKs.
+    SplitApkMetadata instant_apk_metadata = 5;
+    // Set only for system APKs.
+    SystemApkMetadata system_apk_metadata = 6;
+    // Set only for asset slices.
+    SplitApkMetadata asset_slice_metadata = 7;
+    // Set only for APEX APKs.
+    ApexApkMetadata apex_apk_metadata = 8;
+    // Set only for archived APKs.
+    ArchivedApkMetadata archived_apk_metadata = 9;
+  }
+
+  SigningDescription signing_description = 10;
+}
+
+// Holds data specific to signing configuration applied on the APKs.
+message SigningDescription {
+  // Denotes if the generated APK to be signed with the rotated key.
+  bool signed_with_rotated_key = 1;
+}
+
+// Holds data specific to Split APKs.
+message SplitApkMetadata {
+  string split_id = 1;
+
+  // Indicates whether this APK is the master split of the module.
+  bool is_master_split = 2;
+}
+
+// Holds data specific to Standalone APKs.
+message StandaloneApkMetadata {
+  // Names of the modules fused in this standalone APK.
+  repeated string fused_module_name = 1;
+
+  reserved 2;
+}
+
+// Holds data specific to system APKs.
+message SystemApkMetadata {
+  // Names of the modules fused in this system APK.
+  repeated string fused_module_name = 1;
+  // Was "system_apk_type".
+  reserved 2;
+}
+
+// Holds data specific to APEX APKs.
+message ApexApkMetadata {
+  // Configuration for processing of APKs embedded in an APEX image.
+  repeated ApexEmbeddedApkConfig apex_embedded_apk_config = 1;
+}
+
+// Holds data specific to Archived APKs.
+message ArchivedApkMetadata {}
+
+message LocalTestingInfo {
+  // Indicates if the bundle is built in local testing mode.
+  bool enabled = 1;
+  // The local testing path, as specified in the base manifest.
+  // This refers to the relative path on the external directory of the app where
+  // APKs will be pushed for local testing.
+  // Set only if local testing is enabled.
+  string local_testing_path = 2;
+}
+
+// Holds metadata for asset only bundles.
+message AssetModulesInfo {
+  // App versionCodes that will be updated with these asset modules.
+  // Only relevant for asset-only bundles.
+  repeated int64 app_version = 1;
+
+  // Version tag for the asset upload.
+  // Only relevant for asset-only bundles.
+  string asset_version_tag = 2;
+}
+
+// Default value targeted by a particular dimension.
+message DefaultTargetingValue {
+  // The dimension being targeted.
+  SplitDimension.Value dimension = 1;
+
+  // The default value being targeted.
+  string default_value = 2;
+}
+
+message PermanentlyFusedModule {
+  // Module name.
+  string name = 1;
+}
+
+// Describes a runtime-enabled SDK that the app depends on.
+message RuntimeEnabledSdkDependency {
+  // Package name of the runtime-enabled SDK.
+  // Required.
+  string package_name = 1;
+  // Major version of the runtime-enabled SDK.
+  // Required.
+  int32 major_version = 2;
+  // Minor version of the runtime-enabled SDK.
+  // Required.
+  int32 minor_version = 3;
+}
+
+// Metadata of the app module generated from a runtime-enabled SDK that the app
+// depends on.
+message SdkModuleMetadata {
+  // Version of the Runtime-enabled SDK that this module was generated from.
+  optional SdkModuleVersion sdk_module_version = 1;
+
+  // Package name of the runtime-enabled SDK that this module was generated
+  // from.
+  optional string sdk_package_name = 2;
+}
+
+// Versioning information about the SDK that the app module was generated from.
+message SdkModuleVersion {
+  // Major version of the SDK.
+  // Required.
+  optional int32 major = 1;
+  // Minor version of the SDK.
+  // Required.
+  optional int32 minor = 2;
+  // Patch version of the SDK.
+  // Required.
+  optional int32 patch = 3;
+}
+

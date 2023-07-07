@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package android.bundle;
+
+option java_package = "com.android.bundle";
+
+// Code transparency related metadata.
+message CodeTransparency {
+  // List of code-related files in the bundle.
+  repeated CodeRelatedFile code_related_file = 1;
+
+  // Version of code transparency file format.
+  // Required.
+  int32 version = 2;
+}
+
+message CodeRelatedFile {
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    NATIVE_LIBRARY = 1;
+    DEX = 2;
+  }
+  // Code related file may come from either Android App Bundle (AAB) or
+  // bundletool repo. Bundletool repo is used as a source for a DEX file for an
+  // archived APK which is not the part AAB and is injected when APKs are
+  // generated from the AAB.
+  // Required.
+  oneof source {
+    // Path to file in the bundle.
+    string path = 1;
+    // Path to a file that will be injected at build time.
+    // Contained in the bundletool source code.
+    string bundletool_repo_path = 5;
+  };
+  // Type of code-related file.
+  // Required.
+  Type type = 2;
+  // Path to file in the APK. Only set for NATIVE_LIBRARY types.
+  string apk_path = 3;
+  // SHA256 digest of the code-related file.
+  string sha256 = 4;
+}

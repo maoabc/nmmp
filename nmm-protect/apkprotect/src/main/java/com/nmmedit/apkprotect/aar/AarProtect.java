@@ -3,7 +3,6 @@ package com.nmmedit.apkprotect.aar;
 import com.android.tools.r8.D8;
 import com.android.zipflinger.*;
 import com.google.common.collect.HashMultimap;
-import com.nmmedit.apkprotect.ApkProtect;
 import com.nmmedit.apkprotect.BuildNativeLib;
 import com.nmmedit.apkprotect.aar.asm.AsmMethod;
 import com.nmmedit.apkprotect.aar.asm.AsmUtils;
@@ -15,7 +14,7 @@ import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.MyMethodUtil;
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
-import com.nmmedit.apkprotect.util.ApkUtils;
+import com.nmmedit.apkprotect.util.CmakeUtils;
 import com.nmmedit.apkprotect.util.FileUtils;
 import org.jf.dexlib2.iface.Method;
 import org.objectweb.asm.ClassReader;
@@ -26,7 +25,7 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.Deflater;
 
-public class ModuleProtect {
+public class AarProtect {
     private final AarFolders aarFolders;
     private final InstructionRewriter instructionRewriter;
 
@@ -34,10 +33,10 @@ public class ModuleProtect {
 
     private final ClassAnalyzer classAnalyzer;
 
-    private ModuleProtect(AarFolders aarFolders,
-                          InstructionRewriter instructionRewriter,
-                          ClassAndMethodFilter filter,
-                          ClassAnalyzer classAnalyzer) {
+    private AarProtect(AarFolders aarFolders,
+                       InstructionRewriter instructionRewriter,
+                       ClassAndMethodFilter filter,
+                       ClassAnalyzer classAnalyzer) {
         this.aarFolders = aarFolders;
         this.instructionRewriter = instructionRewriter;
         this.filter = filter;
@@ -55,7 +54,7 @@ public class ModuleProtect {
         try {
             final File classesDex = getClassesDex(dexJar, zipExtractTempDir);
 
-            generateCSources();
+            CmakeUtils.generateCSources(aarFolders.apkFolders.getDex2cSrcDir(), instructionRewriter);
 
 
             //
@@ -72,7 +71,7 @@ public class ModuleProtect {
             final File newClassesJar = modifyClassFiles(dexConfig);
 
 
-            final Map<String, List<File>> nativeLibs = ApkProtect.generateNativeLibs(aarFolders.apkFolders,
+            final Map<String, Map<File, File>> nativeLibs = BuildNativeLib.generateNativeLibs(aarFolders.apkFolders.getOutRootDir(),
                     getAbis());
 
             final ZipMap zipMap = ZipMap.from(aar.toPath());
@@ -105,9 +104,10 @@ public class ModuleProtect {
                 //todo 可能需要修改proguard规则文件，保留添加的新类及被修改过的class
 
                 //add native libs
-                for (Map.Entry<String, List<File>> entry : nativeLibs.entrySet()) {
+                for (Map.Entry<String, Map<File, File>> entry : nativeLibs.entrySet()) {
                     final String abi = entry.getKey();
-                    for (File file : entry.getValue()) {
+                    //todo 不清楚是否应该使用未strip的.so文件
+                    for (File file : entry.getValue().values()) {
                         final Source source = Sources.from(file, "jni/" + abi + "/" + file.getName(), Deflater.DEFAULT_COMPRESSION);
                         outAar.add(source);
                     }
@@ -217,31 +217,6 @@ public class ModuleProtect {
                 "x86_64");
     }
 
-    private void generateCSources() throws IOException {
-        final File vmsrcFile = new File(FileUtils.getHomePath(), "tools/vmsrc.zip");
-        //每次强制从资源里复制出来
-        vmsrcFile.getParentFile().mkdirs();
-        //copy vmsrc.zip to external directory
-        try (
-                InputStream inputStream = ApkProtect.class.getResourceAsStream("/vmsrc.zip");
-                final FileOutputStream outputStream = new FileOutputStream(vmsrcFile);
-        ) {
-            FileUtils.copyStream(inputStream, outputStream);
-        }
-        final List<File> cSources = ApkUtils.extractFiles(vmsrcFile, ".*", aarFolders.apkFolders.getDex2cSrcDir());
-
-        //处理指令及apk验证,生成新的c文件
-        for (File source : cSources) {
-            if (source.getName().endsWith("DexOpcodes.h")) {
-                //根据指令重写规则重新生成DexOpcodes.h文件
-                ApkProtect.writeOpcodeHeaderFile(source, instructionRewriter);
-            } else if (source.getName().equals("CMakeLists.txt")) {
-                //处理cmake里配置的本地库名
-                ApkProtect.writeCmakeFile(source, BuildNativeLib.NMMP_NAME);
-            }
-        }
-    }
-
 
     private File extractClassJar() throws IOException {
         final File file = new File(aarFolders.getTempDir(), "classes.jar");
@@ -326,14 +301,14 @@ public class ModuleProtect {
             return this;
         }
 
-        public ModuleProtect build() {
+        public AarProtect build() {
             if (instructionRewriter == null) {
                 throw new RuntimeException("instructionRewriter == null");
             }
             if (classAnalyzer == null) {
                 throw new RuntimeException("classAnalyzer==null");
             }
-            return new ModuleProtect(aarFolders, instructionRewriter, filter, classAnalyzer);
+            return new AarProtect(aarFolders, instructionRewriter, filter, classAnalyzer);
         }
     }
 }

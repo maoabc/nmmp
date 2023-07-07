@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package android.bundle;
+
+import "config.proto";
+
+option java_package = "com.android.bundle";
+
+// Contains the package name and versioning information of the Android SDK
+// Bundle. These are required to generate the installable APKs.
+message SdkModulesConfig {
+  // Version of BundleTool used to generate the Android SDK Bundle.
+  Bundletool bundletool = 1;
+
+  // Package name of the runtime-enabled SDK.
+  string sdk_package_name = 2;
+
+  // Version of the runtime-enabled SDK.
+  RuntimeEnabledSdkVersion sdk_version = 3;
+
+  // The fully qualified name for the platform SDK provider entrypoint class.
+  string sdk_provider_class_name = 4;
+
+  // The fully qualified name for the compatibility SDK provider entrypoint
+  // class.
+  // Expected to be set for SDKs that support devices without the privacy
+  // sandbox.
+  string compat_sdk_provider_class_name = 5;
+}
+
+message RuntimeEnabledSdkVersion {
+  // The major version of the RE SDK.
+  int32 major = 1;
+
+  // The minor version of the RE SDK.
+  int32 minor = 2;
+
+  // The patch version of the RE SDK.
+  int32 patch = 3;
+}

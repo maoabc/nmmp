@@ -1,0 +1,103 @@
+syntax = "proto2";
+
+package android.bundle;
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.android.bundle";
+
+// Lists the dependencies of an application.
+message AppDependencies {
+  // List of all the dependencies, direct and indirect.
+  repeated Library library = 1;
+
+  // Dependencies of the libraries from the list above.
+  repeated LibraryDependencies library_dependencies = 2;
+
+  // List of direct dependencies per bundle module.
+  repeated ModuleDependencies module_dependencies = 3;
+
+  // List of repositories where dependencies were found.
+  repeated Repository repositories = 4;
+}
+
+// List of dependencies of a given library.
+message LibraryDependencies {
+  // Indices correspond to the pool of libraries defined in AppDependencies.
+  optional int32 library_index = 1;
+  repeated int32 library_dep_index = 2;
+}
+
+// Lists the dependencies of a given module.
+message ModuleDependencies {
+  optional string module_name = 1;
+  // Direct module dependencies.
+  // Index is from the pool of libraries defined in AppDependencies.
+  repeated int32 dependency_index = 2;
+}
+
+// Next ID: 5
+message Library {
+  // Type of library dependency.
+  oneof library_oneof {
+    // A library downloaded from a Maven repository.
+    MavenLibrary maven_library = 1;
+    // A library downloaded from a Unity repository.
+    UnityLibrary unity_library = 4;
+  }
+
+  // This message contains various digests of the library contents.
+  message Digests {
+    // SHA256 hash value of the file contents.
+    optional bytes sha256 = 1;
+  }
+
+  optional Digests digests = 2;
+
+  // Repository from which the artifact was retrieved (if known).
+  // Index is from pool of repositories defined in AppDependencies.
+  optional google.protobuf.Int32Value repo_index = 3;
+}
+
+message MavenLibrary {
+  optional string group_id = 1;
+  optional string artifact_id = 2;
+  optional string packaging = 3;
+  optional string classifier = 4;
+  optional string version = 5;
+}
+
+message UnityLibrary {
+  // Corresponds to the "name" field in the package.json, uniquely identifying
+  // the library.
+  optional string package_name = 1;
+
+  // Corresponds to the "version" field in the package.json file of the version
+  // of the library actually compiled in the app.
+  optional string version = 2;
+}
+
+// A repository for resolving artifacts and metadata.
+message Repository {
+  // The type of the repository, and any type-specific configuration info.
+  oneof repo_oneof {
+    MavenRepo maven_repo = 1;
+    IvyRepo ivy_repo = 2;
+    UnityRepo unity_repo = 3;
+  }
+}
+
+message MavenRepo {
+  // The root url for the repository.
+  optional string url = 1;
+}
+
+message IvyRepo {
+  // The root url for the repository.
+  optional string url = 1;
+}
+
+message UnityRepo {
+  // The root url for the repository.
+  optional string url = 1;
+}

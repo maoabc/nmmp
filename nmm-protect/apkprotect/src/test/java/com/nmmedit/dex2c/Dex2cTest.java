@@ -12,7 +12,6 @@ import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.writer.io.FileDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
 import org.junit.Test;
 
@@ -76,10 +75,10 @@ public class Dex2cTest {
         }
 
         //需要看输出文件可以自己制定目录
-        File outdir = File.createTempFile("mytest", "dex2c-dir");
-        if(!outdir.exists()) outdir.mkdirs();
-        dexPool.writeTo(new FileDataStore(new File(outdir,"classes2.dex")));
-        dexPoolMethodIml.writeTo(new FileDataStore(new File(outdir,"sym.dat")));
+//        File outdir = File.createTempFile("mytest", "dex2c-dir");
+//        if(!outdir.exists()) outdir.mkdirs();
+//        dexPool.writeTo(new FileDataStore(new File(outdir,"classes2.dex")));
+//        dexPoolMethodIml.writeTo(new FileDataStore(new File(outdir,"sym.dat")));
 
     }
 

@@ -1,11 +1,15 @@
 package com.nmmedit.apkprotect;
 
 import com.nmmedit.apkprotect.data.Prefs;
+import com.nmmedit.apkprotect.util.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BuildNativeLib {
     //库名称
@@ -15,9 +19,51 @@ public class BuildNativeLib {
     //虚拟机库名称,如果cmake里配置为静态库,这个可以忽略
     public static final String VM_NAME = "nmmvm";
 
+    public static Map<String, Map<File, File>> generateNativeLibs(@Nonnull File outDir,
+                                                                  @Nonnull final List<String> abis) throws IOException {
+        String cmakePath = System.getenv("CMAKE_PATH");
+        if (isEmpty(cmakePath)) {
+            System.err.println("No CMAKE_PATH");
+            cmakePath = Prefs.cmakePath();
+        }
+        String sdkHome = System.getenv("ANDROID_SDK_HOME");
+        if (isEmpty(sdkHome)) {
+            sdkHome = Prefs.sdkPath();
+            System.err.println("No ANDROID_SDK_HOME. Default is " + sdkHome);
+        }
+        String ndkHome = System.getenv("ANDROID_NDK_HOME");
+        if (isEmpty(ndkHome)) {
+            ndkHome = Prefs.ndkPath();
+            System.err.println("No ANDROID_NDK_HOME. Default is " + ndkHome);
+        }
+
+
+        final Map<String, Map<File, File>> allLibs = new HashMap<>();
+
+        for (String abi : abis) {
+            final BuildNativeLib.CMakeOptions cmakeOptions = new BuildNativeLib.CMakeOptions(cmakePath,
+                    sdkHome,
+                    ndkHome, 21,
+                    outDir.getAbsolutePath(),
+                    BuildNativeLib.CMakeOptions.BuildType.RELEASE,
+                    abi);
+
+            //删除上次创建的目录
+            FileUtils.deleteFile(new File(cmakeOptions.getBuildPath()));
+
+            final Map<File, File> files = BuildNativeLib.build(cmakeOptions);
+            allLibs.put(abi, files);
+        }
+        return allLibs;
+    }
+
+    private static boolean isEmpty(String s) {
+        return s == null || "".equals(s);
+    }
+
 
     //编译出native lib，同时返回最后的so文件
-    public static List<File> build(@NotNull CMakeOptions options) throws IOException {
+    public static Map<File, File> build(@NotNull CMakeOptions options) throws IOException {
 
         final List<String> cmakeArguments = options.getCmakeArguments();
         //cmake
@@ -30,18 +76,20 @@ public class BuildNativeLib {
                 options.getBuildPath()
         ));
         //strip
-        final List<File> sharedObjectPath = options.getSharedObjectFile();
-        for (File file : sharedObjectPath) {
+        final Map<File, File> soMaps = options.getSharedObjectFileMap();
+        for (Map.Entry<File, File> entry : soMaps.entrySet()) {
             execCmd(Arrays.asList(
                             options.getStripBinaryPath(),
                             "--strip-unneeded",
-                            file.getAbsolutePath()
+                            "-o",
+                            entry.getValue().getAbsolutePath(),
+                            entry.getKey().getAbsolutePath()
                     )
             );
         }
 
         //编译成功的so
-        return sharedObjectPath;
+        return soMaps;
     }
 
     private static void execCmd(List<String> cmds) throws IOException {
@@ -132,10 +180,15 @@ public class BuildNativeLib {
             return abi;
         }
 
-        public String getLibOutputDir() {
-            return new File(new File(getProjectHome(), "obj"), abi).getAbsolutePath();
+        @Nonnull
+        public String getLibStripOutputDir() {
+            return new File(new File(getProjectHome(), "obj/strip"), abi).getAbsolutePath();
         }
 
+        @Nonnull
+        public String getLibSymOutputDir() {
+            return new File(new File(getProjectHome(), "obj/sym"), abi).getAbsolutePath();
+        }
 
         //camke --build <BuildPath>
         public String getBuildPath() {
@@ -168,7 +221,7 @@ public class BuildNativeLib {
                     String.format("-DCMAKE_ANDROID_ARCH_ABI=%s", getAbi()),
                     String.format("-DCMAKE_ANDROID_NDK=%s", getNdkHome()),
                     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-                    String.format("-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s", getLibOutputDir()),
+                    String.format("-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s", getLibSymOutputDir()),
                     String.format("-DCMAKE_MAKE_PROGRAM=%s", getNinjaBinaryPath()),
                     "-DCMAKE_SYSTEM_NAME=Android",
                     String.format("-DCMAKE_SYSTEM_VERSION=%d", getApiLevel()),
@@ -176,33 +229,42 @@ public class BuildNativeLib {
                     "-GNinja");
         }
 
-        //最后输出的so文件
-        public List<File> getSharedObjectFile() {
-            //linux,etc.
-            final String vmLibName = "lib" + VM_NAME + ".so";
+        //未strip的so跟strip之后的so，
+        @Nonnull
+        public Map<File, File> getSharedObjectFileMap() {
+            final HashMap<File, File> map = new HashMap<>();
+            final String libSymOutputDir = getLibSymOutputDir();
 
-            final String nmmpLibName = "lib" + NMMP_NAME + ".so";
+            final File stripOutputDir = new File(getLibStripOutputDir());
+            if (!stripOutputDir.exists()) stripOutputDir.mkdirs();
 
-            File vmSo = new File(getLibOutputDir(), vmLibName);
-            File mpSo = new File(getLibOutputDir(), nmmpLibName);
+            final String vm = "lib" + VM_NAME + ".so";
 
-            if (!vmSo.exists()) {
+            File vmFile = new File(libSymOutputDir, vm);
+            if (!vmFile.exists()) {
                 //windows
-                vmSo = new File(getBuildPath(), "vm/" + vmLibName);
+                vmFile = new File(getBuildPath(), "vm/" + vm);
             }
-            if (!vmSo.exists()) {
-                throw new RuntimeException("Not Found so: " + vmSo.getAbsolutePath());
-            }
-
-            if (!mpSo.exists()) {
-                mpSo = new File(getBuildPath(), nmmpLibName);
-            }
-            if (!mpSo.exists()) {
-                throw new RuntimeException("Not Found so: " + mpSo.getAbsolutePath());
+            if (!vmFile.exists()) {
+                throw new RuntimeException("Not Found so: " + vmFile.getAbsolutePath());
             }
 
-            return Arrays.asList(vmSo, mpSo);
+            map.put(vmFile, new File(stripOutputDir, vm));
+
+            final String vmp = "lib" + NMMP_NAME + ".so";
+            File vmpFile = new File(libSymOutputDir, vmp);
+            if (!vmpFile.exists()) {
+                //windows
+                vmpFile = new File(getBuildPath(), vmp);
+            }
+            if (!vmpFile.exists()) {
+                throw new RuntimeException("Not Found so: " + vmpFile.getAbsolutePath());
+            }
+            map.put(vmpFile, new File(stripOutputDir, vmp));
+
+            return map;
         }
+
 
         public enum BuildType {
             DEBUG("Debug"),

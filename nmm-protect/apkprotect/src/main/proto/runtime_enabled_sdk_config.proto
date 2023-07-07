@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package android.bundle;
+
+option java_package = "com.android.bundle";
+option java_outer_classname = "RuntimeEnabledSdkConfigProto";
+
+// Information about runtime-enabled SDK dependencies of a specific module
+// inside the App Bundle.
+message RuntimeEnabledSdkConfig {
+  // Runtime-enabled SDKs in this config.
+  repeated RuntimeEnabledSdk runtime_enabled_sdk = 1;
+}
+
+message RuntimeEnabledSdk {
+  // Package name of the runtime-enabled SDK.
+  string package_name = 1;
+  // Major version of the runtime-enabled SDK.
+  int32 version_major = 2;
+  // Minor version of the runtime-enabled SDK.
+  int32 version_minor = 3;
+  // Patch version of the runtime-enabled SDK.
+  // The dependency on a specific patch version is a build-time soft dependency,
+  // that ensures reproducibility of local builds; it does not imply that all
+  // app stores will honour it when delivering apps to end-users. For instance,
+  // some stores may just honour the dependency on a specific major and minor,
+  // while serve the latest available patch for the given major.minor version of
+  // the SDK.
+  int32 build_time_version_patch = 6;
+  // SHA-256 hash of the runtime-enabled SDK's signing certificate, represented
+  // as a string of bytes in hexadecimal form, with ':' separating the bytes.
+  string certificate_digest = 4;
+  // Package ID that the resource IDs of this runtime-enabled SDK must be
+  // remapped to.
+  int32 resources_package_id = 5;
+}
+
+// Options for overriding parts of runtime-enabled SDK dependency configuration
+// for local deployment and testing.
+message LocalDeploymentRuntimeEnabledSdkConfig {
+  // Options for overriding SDK certificate digests in RuntimeEnabledSdkConfig
+  // of the app bundle.
+  CertificateOverrides certificate_overrides = 1;
+}
+
+// Contains information on certificate digests that should be overridden in
+// runtime-enabled SDK dependency config for local deployment.
+message CertificateOverrides {
+  // Certificate digest override for specific SDKs.
+  repeated CertificateOverride per_sdk_certificate_override = 1;
+  // Default certificate override. If set, certificate digests of SDKs that are
+  // not present in per_sdk_certificate_override field will be overriden to this
+  // value.
+  optional string default_certificate_override = 2;
+}
+
+// Contains information on certificate digest overrides for a specific SDK.
+message CertificateOverride {
+  // Package name of the SDK that we want to override the certificate digest
+  // for.
+  string sdk_package_name = 1;
+  // Certificate digest that we should override to.
+  string certificate_digest = 2;
+}
+
+// Properties that backwards-compatible SDK split inherits from the app.
+message SdkSplitPropertiesInheritedFromApp {
+  // Package name of the app.
+  string package_name = 1;
+  // Version code of the app.
+  int32 version_code = 2;
+  // minSdkVersion of the app.
+  int32 min_sdk_version = 3;
+  // Package ID that the SDK resources should be remapped to so that they do not
+  // conflict with the app's resources.
+  int32 resources_package_id = 4;
+}
