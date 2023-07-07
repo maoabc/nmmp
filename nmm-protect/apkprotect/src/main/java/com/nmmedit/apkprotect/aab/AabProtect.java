@@ -31,6 +31,7 @@ public class AabProtect {
 
     public static final String BUNDLE_MAPPING = "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map";
     public static final String BUNDLE_CONFIG = "BundleConfig.pb";
+    public static final String NATIVE_PB = "base/native.pb";
     @Nonnull
     private final AabFolders aabFolders;
     @Nonnull
@@ -113,7 +114,7 @@ public class AabProtect {
 
             //编译c代码生成库,
             final List<String> abis = getAbis(inAab);
-            final Map<String, Map<File, File>> nativeLibs = BuildNativeLib.generateNativeLibs(aabFolders.getOutRootDir(),abis);
+            final Map<String, Map<File, File>> nativeLibs = BuildNativeLib.generateNativeLibs(aabFolders.getOutRootDir(), abis);
 
 
             final File outputAab = aabFolders.getOutputAab();
@@ -164,7 +165,7 @@ public class AabProtect {
                 final ByteArrayOutputStream bout = new ByteArrayOutputStream();
                 ProtoUtils.NativeLibraries.writeNativePB(abis, bout);
 
-                final BytesSource nativeSource = new BytesSource(bout.toByteArray(), "base/native.pb", Deflater.DEFAULT_COMPRESSION);
+                final BytesSource nativeSource = new BytesSource(bout.toByteArray(), NATIVE_PB, Deflater.DEFAULT_COMPRESSION);
                 zipArchive.add(nativeSource);
             }
 
@@ -203,7 +204,7 @@ public class AabProtect {
         final Pattern regex = Pattern.compile(
                 "base/dex/classes(\\d)*\\.dex" +
                         "|META-INF/.*\\.(RSA|DSA|EC|SF|MF)" +
-                        "|base/native.pb" +
+                        "|" + NATIVE_PB +
                         "|" + ANDROID_MANIFEST_XML +
                         "|" + BUNDLE_CONFIG);
         //处理后的zip数据
