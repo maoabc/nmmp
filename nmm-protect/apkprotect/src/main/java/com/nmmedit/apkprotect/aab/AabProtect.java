@@ -36,13 +36,16 @@ public class AabProtect {
     private final AabFolders aabFolders;
     @Nonnull
     private final InstructionRewriter instructionRewriter;
+    private final ClassAnalyzer classAnalyzer;
     private final ClassAndMethodFilter filter;
 
     public AabProtect(@Nonnull AabFolders aabFolders,
                       @Nonnull InstructionRewriter instructionRewriter,
+                      @Nonnull ClassAnalyzer classAnalyzer,
                       ClassAndMethodFilter filter) {
         this.aabFolders = aabFolders;
         this.instructionRewriter = instructionRewriter;
+        this.classAnalyzer = classAnalyzer;
         this.filter = filter;
     }
 
@@ -70,7 +73,6 @@ public class AabProtect {
             if (files.isEmpty()) {
                 throw new RuntimeException("No classes.dex");
             }
-            final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
             for (File file : files) {
                 classAnalyzer.loadDexFile(file);
             }
@@ -253,6 +255,7 @@ public class AabProtect {
     public static class Builder {
         private final AabFolders aabFolders;
         private InstructionRewriter instructionRewriter;
+        private ClassAnalyzer classAnalyzer;
         private ClassAndMethodFilter filter;
 
 
@@ -271,11 +274,19 @@ public class AabProtect {
             return this;
         }
 
+        public Builder setClassAnalyzer(ClassAnalyzer classAnalyzer) {
+            this.classAnalyzer = classAnalyzer;
+            return this;
+        }
+
         public AabProtect build() {
             if (instructionRewriter == null) {
                 throw new RuntimeException("instructionRewriter == null");
             }
-            return new AabProtect(aabFolders, instructionRewriter, filter);
+            if (classAnalyzer == null) {
+                throw new RuntimeException("classAnalyzer == null");
+            }
+            return new AabProtect(aabFolders, instructionRewriter, classAnalyzer, filter);
         }
     }
 }

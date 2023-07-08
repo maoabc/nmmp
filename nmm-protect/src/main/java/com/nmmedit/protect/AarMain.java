@@ -10,13 +10,13 @@ import com.nmmedit.apkprotect.dex2c.filters.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class AarModuleMain {
+public class AarMain {
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             System.err.println("No Input aar.");
             System.err.println("<inAar> [<convertRuleFile> mapping.txt]");
-            System.exit(-1);
+            return;
         }
         final File aar = new File(args[0]);
         final File outDir = new File(aar.getParentFile(), "build");

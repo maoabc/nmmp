@@ -1,19 +1,34 @@
 package com.nmmedit.apkprotect.deobfus;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class MappingReader {
     private final File mappingFile;
+    private final InputStream mappingInput;
 
     public MappingReader(File mappingFile) {
         this.mappingFile = mappingFile;
+        this.mappingInput = null;
+    }
+
+    public MappingReader(InputStream mappingInput) {
+        this.mappingInput = mappingInput;
+        this.mappingFile = null;
+    }
+
+    private Reader getMappingReader() throws IOException {
+        if (mappingFile != null) {
+            return new FileReader(mappingFile);
+        }
+        if (mappingInput != null) {
+            return new InputStreamReader(mappingInput, StandardCharsets.UTF_8);
+        }
+        throw new IOException("No mapping");
     }
 
     public void parse(MappingProcessor processor) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(mappingFile))
+        try (BufferedReader reader = new BufferedReader(getMappingReader())
         ) {
             String className = null;
             String line;
