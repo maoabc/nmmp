@@ -15,6 +15,7 @@ public class Main {
             AabMain.main(newArgs);
             System.err.println("aar:");
             AarMain.main(newArgs);
+            System.exit(-1);
             return;
         }
         final String[] newArgs = Arrays.copyOfRange(args, 1, args.length);
