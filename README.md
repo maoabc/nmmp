@@ -7,7 +7,7 @@
 
 不编译nmm-protect，可以直接看使用它生成项目及最后的apk，[一个对apk处理的例子](https://github.com/maoabc/nmmp/releases/download/demo/demo.zip)。
 
-例子在linux环境下测试的，windows也应该没问题,先安装好JDK及android sdk和ndk。(windows下apk资源复制可能出问题，如果遇到可以手动处理，复制旧apk里的res到加固后的apk)
+例子在linux环境下测试的，windows也应该没问题,先安装好JDK及android sdk和ndk。
 
 下载[vm-protect.jar](https://github.com/maoabc/nmmp/releases/download/last/vm-protect-2023-07-08-0942.jar),配置好环境变量ANDROID_SDK_HOME、ANDROID_NDK_HOME:
 ``` bash
