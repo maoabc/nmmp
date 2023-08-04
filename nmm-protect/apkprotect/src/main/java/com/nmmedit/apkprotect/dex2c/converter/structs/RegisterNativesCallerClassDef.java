@@ -197,20 +197,17 @@ public class RegisterNativesCallerClassDef extends BaseTypeReference implements 
 
         @Override
         public MethodImplementation getImplementation() {
-            if (method == null) {
-                final MutableMethodImplementation implementation = new MutableMethodImplementation(1);
+            final MethodImplementation implementation;
+            if (method == null || (implementation = method.getImplementation()) == null) {
+                final MutableMethodImplementation newImpl = new MutableMethodImplementation(1);
                 final List<BuilderInstruction> insns = getCallRegisterNativesMethod();
                 for (BuilderInstruction insn : insns) {
-                    implementation.addInstruction(insn);
+                    newImpl.addInstruction(insn);
                 }
 
-                implementation.addInstruction(new BuilderInstruction10x(Opcode.RETURN_VOID));
-                return implementation;
+                newImpl.addInstruction(new BuilderInstruction10x(Opcode.RETURN_VOID));
+                return newImpl;
             } else {
-                final MethodImplementation implementation = method.getImplementation();
-                if (implementation == null) {
-                    throw new RuntimeException("static block methodImpl == null");
-                }
                 final MutableMethodImplementation newImpl = new MutableMethodImplementation(implementation) {
                     //因为<clinit>方法不会有参数,所以直接改寄存器数不会出问题
                     @Override
