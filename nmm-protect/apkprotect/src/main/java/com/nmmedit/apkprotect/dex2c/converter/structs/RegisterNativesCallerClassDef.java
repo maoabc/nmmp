@@ -101,7 +101,10 @@ public class RegisterNativesCallerClassDef extends BaseTypeReference implements 
         final List<Method> methods = new ArrayList<>();
         boolean handled = false;
         for (Method directMethod : directMethods) {
-            if (directMethod.getName().equals(CLINIT_METHOD)) {
+            if (directMethod.getName().equals(CLINIT_METHOD)
+                    && directMethod.getParameters().isEmpty()
+                    && "V".equals(directMethod.getReturnType())
+            ) {//保证是static <clinit>()V方法. #82
                 methods.add(new RegisterNativesStaticBlock(directMethod));
                 handled = true;
             } else {
