@@ -197,8 +197,7 @@ public class RegisterNativesCallerClassDef extends BaseTypeReference implements 
 
         @Override
         public MethodImplementation getImplementation() {
-            final MethodImplementation implementation;
-            if (method == null || (implementation = method.getImplementation()) == null) {
+            if (method == null) {
                 final MutableMethodImplementation newImpl = new MutableMethodImplementation(1);
                 final List<BuilderInstruction> insns = getCallRegisterNativesMethod();
                 for (BuilderInstruction insn : insns) {
@@ -208,6 +207,10 @@ public class RegisterNativesCallerClassDef extends BaseTypeReference implements 
                 newImpl.addInstruction(new BuilderInstruction10x(Opcode.RETURN_VOID));
                 return newImpl;
             } else {
+                final MethodImplementation implementation = method.getImplementation();
+                if (implementation == null) {//无方法体static{},肯定出错不用考虑后续
+                    throw new RuntimeException("static block methodImpl == null");
+                }
                 final MutableMethodImplementation newImpl = new MutableMethodImplementation(implementation) {
                     //因为<clinit>方法不会有参数,所以直接改寄存器数不会出问题
                     @Override
