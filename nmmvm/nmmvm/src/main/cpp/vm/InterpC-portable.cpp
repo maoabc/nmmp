@@ -10,7 +10,7 @@
 #include "Exception.h"
 #include "Interp.h"
 #include "vm.h"
-
+#include "JNIWrapper.h"
 
 
 
@@ -50,9 +50,9 @@ static const char kSpacing[] = "            ";
 
 #define GET_REGISTER_AS_OBJECT(_idx)       ((jobject) fp[(_idx)])
 
-#define DELETE_LOCAL_REF(_idx)                         \
-if(GET_REGISTER_FLAGS(_idx)){                          \
-    env->DeleteLocalRef(GET_REGISTER_AS_OBJECT(_idx)); \
+#define DELETE_LOCAL_REF(_idx)                                  \
+if(GET_REGISTER_FLAGS(_idx)){                                   \
+    wrapper->DeleteLocalRef(env, GET_REGISTER_AS_OBJECT(_idx)); \
 }
 
 #define SET_REGISTER_AS_OBJECT(_idx, _val)  \
@@ -664,7 +664,7 @@ SET_REGISTER_FLAGS(_idx, 0)
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
         _setreg;                                                            \
-        if (env->ExceptionCheck()) {                                        \
+        if (wrapper->ExceptionCheck(env)) {                                 \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ AGET[%d]=%#x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));   \
@@ -688,7 +688,7 @@ SET_REGISTER_FLAGS(_idx, 0)
         }                                                                   \
         u4 idx = GET_REGISTER(vsrc2);                                       \
         _setarray;                                                          \
-        if (env->ExceptionCheck()) {                                        \
+        if (wrapper->ExceptionCheck(env)) {                                 \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
@@ -810,28 +810,28 @@ FINISH(2);
 #define NEW_ARRAY(_typeCh, _type, _len)                                     \
     switch (_typeCh) {                                                      \
     case 'Z':                                                               \
-        newArray = env->NewBooleanArray(_len);                              \
+        newArray = wrapper->NewBooleanArray(env, _len);                              \
         break;                                                              \
     case 'B':                                                               \
-        newArray = env->NewByteArray(_len);                                 \
+        newArray = wrapper->NewByteArray(env, _len);                                 \
         break;                                                              \
     case 'C':                                                               \
-        newArray = env->NewCharArray(_len);                                 \
+        newArray = wrapper->NewCharArray(env, _len);                                 \
         break;                                                              \
     case 'S':                                                               \
-        newArray = env->NewShortArray(_len);                                \
+        newArray = wrapper->NewShortArray(env, _len);                                \
         break;                                                              \
     case 'I':                                                               \
-        newArray = env->NewIntArray(_len);                                  \
+        newArray = wrapper->NewIntArray(env, _len);                                  \
         break;                                                              \
     case 'F':                                                               \
-        newArray = env->NewFloatArray(_len);                                \
+        newArray = wrapper->NewFloatArray(env, _len);                                \
         break;                                                              \
     case 'J':                                                               \
-        newArray = env->NewLongArray(_len);                                 \
+        newArray = wrapper->NewLongArray(env, _len);                                 \
         break;                                                              \
     case 'D':                                                               \
-        newArray = env->NewDoubleArray(_len);                               \
+        newArray = wrapper->NewDoubleArray(env, _len);                               \
         break;                                                              \
     case 'L':                                                               \
     case '[': {                                                             \
@@ -840,7 +840,7 @@ FINISH(2);
         if (arrayClass.get() == NULL) {                                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
-        newArray = env->NewObjectArray((_len), arrayClass.get(), NULL);     \
+        newArray = wrapper->NewObjectArray(env, (_len), arrayClass.get(), NULL);     \
         break;                                                              \
     }                                                                       \
     default:                                                                \
@@ -852,42 +852,42 @@ FINISH(2);
     switch(_typeCh){                                                        \
     case '[':                                                               \
     case 'L':                                                               \
-        env->SetObjectArrayElement((jobjectArray) (_array), (_idx),         \
+        wrapper->SetObjectArrayElement(env, (jobjectArray) (_array), (_idx), \
                                    GET_REGISTER_AS_OBJECT(_vsrc));          \
         break;                                                              \
     case 'Z':{                                                              \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetBooleanArrayRegion((jbooleanArray) (_array), _idx, 1,       \
+        wrapper->SetBooleanArrayRegion(env, (jbooleanArray) (_array), _idx, 1,       \
                                (const jboolean *) (&val));                  \
         break;                                                              \
     }                                                                       \
     case 'B': {                                                             \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetByteArrayRegion((jbyteArray) (_array), _idx, 1,             \
+        wrapper->SetByteArrayRegion(env, (jbyteArray) (_array), _idx, 1,             \
                                (const jbyte *) (&val));                     \
         break;                                                              \
     }                                                                       \
     case 'S': {                                                             \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetShortArrayRegion((jshortArray) (_array), _idx, 1,           \
+        wrapper->SetShortArrayRegion(env, (jshortArray) (_array), _idx, 1,           \
                                (const jshort *) (&val));                    \
         break;                                                              \
     }                                                                       \
     case 'C': {                                                             \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetCharArrayRegion((jcharArray) (_array), _idx, 1,             \
+        wrapper->SetCharArrayRegion(env, (jcharArray) (_array), _idx, 1,             \
                                (const jchar *) (&val));                     \
         break;                                                              \
     }                                                                       \
     case 'I': {                                                             \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetIntArrayRegion((jintArray) (_array), _idx, 1,               \
+        wrapper->SetIntArrayRegion(env, (jintArray) (_array), _idx, 1,               \
                                (const jint *) (&val));                      \
         break;                                                              \
     }                                                                       \
     case 'F':{                                                              \
         val = GET_REGISTER(_vsrc);                                          \
-        env->SetFloatArrayRegion((jfloatArray) (_array), _idx, 1,           \
+        wrapper->SetFloatArrayRegion(env, (jfloatArray) (_array), _idx, 1,           \
                                (const jfloat *) (&val));                    \
         break;                                                              \
     }                                                                       \
@@ -981,7 +981,7 @@ FINISH(2);
         free(args);                                                            \
     }                                                                          \
                                                                                \
-    if(env->ExceptionCheck()){                                                 \
+    if(wrapper->ExceptionCheck(env)){                                          \
         GOTO_exceptionThrown();                                                \
     }                                                                          \
     FINISH(3);                                                                 \
@@ -1050,7 +1050,7 @@ FINISH(2);
         free(args);                                                            \
     }                                                                          \
                                                                                \
-    if(env->ExceptionCheck()){                                                 \
+    if(wrapper->ExceptionCheck(env)){                                          \
         GOTO_exceptionThrown();                                                \
     }                                                                          \
     FINISH(3);                                                                 \
@@ -1074,6 +1074,7 @@ jvalue vmInterpret(
     const u2 *pc = code->insns;
     u2 inst;                    // current instruction
 
+    const JNIWrapper *wrapper = getJNIWrapper();
 
     /* instruction decoding */
     u4 ref;                     // 16 or 32-bit quantity fetched directly
@@ -1170,7 +1171,7 @@ jvalue vmInterpret(
         ILOGV("|move%s v%d,v%d %s(v%d=0x%08x)",
               (INST_INST(inst) == OP_MOVE) ? "" : "-object", vdst, vsrc1,
               kSpacing, vdst, GET_REGISTER(vsrc1));
-        newRef = env->NewLocalRef(GET_REGISTER_AS_OBJECT(vsrc1));
+        newRef = wrapper->NewLocalRef(env, GET_REGISTER_AS_OBJECT(vsrc1));
         SET_REGISTER_AS_OBJECT(vdst, newRef);
     }
     FINISH(1);
@@ -1186,7 +1187,7 @@ jvalue vmInterpret(
         ILOGV("|move%s/from16 v%d,v%d %s(v%d=0x%08x)",
               (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
               kSpacing, vdst, GET_REGISTER(vsrc1));
-        newRef = env->NewLocalRef(GET_REGISTER_AS_OBJECT(vsrc1));
+        newRef = wrapper->NewLocalRef(env, GET_REGISTER_AS_OBJECT(vsrc1));
         SET_REGISTER_AS_OBJECT(vdst, newRef);
     }
     FINISH(2);
@@ -1202,7 +1203,7 @@ jvalue vmInterpret(
         ILOGV("|move%s/16 v%d,v%d %s(v%d=0x%08x)",
               (INST_INST(inst) == OP_MOVE_16) ? "" : "-object", vdst, vsrc1,
               kSpacing, vdst, GET_REGISTER(vsrc1));
-        newRef = env->NewLocalRef(GET_REGISTER_AS_OBJECT(vsrc1));
+        newRef = wrapper->NewLocalRef(env, GET_REGISTER_AS_OBJECT(vsrc1));
         SET_REGISTER_AS_OBJECT(vdst, newRef);
     }
     FINISH(3);
@@ -1242,8 +1243,8 @@ jvalue vmInterpret(
     HANDLE_OPCODE(OP_MOVE_EXCEPTION /*vAA*/)
     vdst = INST_AA(inst);
     ILOGV("|move-exception v%d", vdst);
-    SET_REGISTER_AS_OBJECT(vdst, env->ExceptionOccurred());
-    env->ExceptionClear();
+    SET_REGISTER_AS_OBJECT(vdst, wrapper->ExceptionOccurred(env));
+    wrapper->ExceptionClear(env);
     FINISH(1);
     OP_END
 
@@ -1440,7 +1441,7 @@ jvalue vmInterpret(
             dvmThrowNullPointerException(env, NULL);
             GOTO_exceptionThrown();
         }
-        if (env->MonitorEnter(obj) != JNI_OK) {
+        if (wrapper->MonitorEnter(env, obj) != JNI_OK) {
             GOTO_exceptionThrown();
         }
         ILOGV("+ locking %p ", obj);
@@ -1461,7 +1462,7 @@ jvalue vmInterpret(
             dvmThrowNullPointerException(env, NULL);
             GOTO_exceptionThrown();
         }
-        if (env->MonitorExit(obj) != JNI_OK) {
+        if (wrapper->MonitorExit(env, obj) != JNI_OK) {
             GOTO_exceptionThrown();
         }
         ILOGV("+ unlocking %p", obj);
@@ -1486,7 +1487,7 @@ jvalue vmInterpret(
                 GOTO_exceptionThrown();
             }
 
-            if (!env->IsInstanceOf(obj, clazz.get())) {
+            if (!wrapper->IsInstanceOf(env, obj, clazz.get())) {
                 dvmThrowClassCastException(env, obj, clazz.get());
                 GOTO_exceptionThrown();
             }
@@ -1514,7 +1515,7 @@ jvalue vmInterpret(
             if (clazz.get() == NULL) {
                 GOTO_exceptionThrown();
             }
-            isInstanceOf = env->IsInstanceOf(obj, clazz.get());
+            isInstanceOf = wrapper->IsInstanceOf(env, obj, clazz.get());
             SET_REGISTER(vdst, isInstanceOf);
         }
     }
@@ -1536,7 +1537,7 @@ jvalue vmInterpret(
             GOTO_exceptionThrown();
         }
 
-        arrayLength = env->GetArrayLength(arrayObj);
+        arrayLength = wrapper->GetArrayLength(env, arrayObj);
         SET_REGISTER(vdst, arrayLength);
     }
     FINISH(1);
@@ -1555,7 +1556,7 @@ jvalue vmInterpret(
         if (clazz.get() == NULL) {
             GOTO_exceptionThrown();
         }
-        newObj = env->AllocObject(clazz.get());
+        newObj = wrapper->AllocObject(env, clazz.get());
         if (newObj == NULL) {
             GOTO_exceptionThrown();
         }
@@ -1648,7 +1649,7 @@ jvalue vmInterpret(
             dvmThrowNullPointerException(env, NULL);
         } else {
             /* use the requested exception */
-            env->Throw(obj);
+            wrapper->Throw(env, obj);
         }
         GOTO_exceptionThrown();
     }
@@ -1768,7 +1769,8 @@ HANDLE_OP_CMPX(OP_CMP_LONG, "-long", s8, _WIDE, 0)
     vsrc2 = INST_B(inst);
     if (GET_REGISTER_FLAGS(vsrc1)) {
         //对象寄存器 需要特殊比较
-        if (env->IsSameObject(GET_REGISTER_AS_OBJECT(vsrc1), GET_REGISTER_AS_OBJECT(vsrc2))) {
+        if (wrapper->IsSameObject(env, GET_REGISTER_AS_OBJECT(vsrc1),
+                                  GET_REGISTER_AS_OBJECT(vsrc2))) {
             int branchOffset = (s2) FETCH(1);    /* sign-extended */
             ILOGV("|if-eq v%d,v%d,+0x%04x", vsrc1, vsrc2,
                   branchOffset);
@@ -1801,7 +1803,8 @@ HANDLE_OP_CMPX(OP_CMP_LONG, "-long", s8, _WIDE, 0)
     vsrc2 = INST_B(inst);
     if (GET_REGISTER_FLAGS(vsrc1)) {
         //对象寄存器 需要特殊比较
-        if (!env->IsSameObject(GET_REGISTER_AS_OBJECT(vsrc1), GET_REGISTER_AS_OBJECT(vsrc2))) {
+        if (!wrapper->IsSameObject(env, GET_REGISTER_AS_OBJECT(vsrc1),
+                                   GET_REGISTER_AS_OBJECT(vsrc2))) {
             int branchOffset = (s2) FETCH(1);    /* sign-extended */
             ILOGV("|if-eq v%d,v%d,+0x%04x", vsrc1, vsrc2,
                   branchOffset);
@@ -1894,14 +1897,14 @@ HANDLE_OP_IF_XXZ(OP_IF_LEZ, "lez", <=)
 
 /* File: c/OP_AGET.cpp */
 HANDLE_OP_AGET(OP_AGET, "", {
-    if (idx >= env->GetArrayLength(arrayObj)) {
+    if (idx >= wrapper->GetArrayLength(env, arrayObj)) {
         dvmThrowArrayIndexOutOfBoundsException(env,
-                                               env->GetArrayLength(arrayObj), idx);
+                                               wrapper->GetArrayLength(env, arrayObj), idx);
         GOTO_exceptionThrown();
     }
-    u4 *arrData = (u4 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
+    u4 *arrData = (u4 *) wrapper->GetPrimitiveArrayCritical(env, arrayObj, NULL);
     u4 val = arrData[idx];
-    env->ReleasePrimitiveArrayCritical(arrayObj, arrData, JNI_ABORT);
+    wrapper->ReleasePrimitiveArrayCritical(env, arrayObj, arrData, JNI_ABORT);
 
     SET_REGISTER(vdst, val);
 
@@ -1910,14 +1913,14 @@ HANDLE_OP_AGET(OP_AGET, "", {
 
 /* File: c/OP_AGET_WIDE.cpp */
 HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", {
-    if (idx >= env->GetArrayLength(arrayObj)) {
+    if (idx >= wrapper->GetArrayLength(env, arrayObj)) {
         dvmThrowArrayIndexOutOfBoundsException(env,
-                                               env->GetArrayLength(arrayObj), idx);
+                                               wrapper->GetArrayLength(env, arrayObj), idx);
         GOTO_exceptionThrown();
     }
-    u8 *arrData = (u8 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
+    u8 *arrData = (u8 *) wrapper->GetPrimitiveArrayCritical(env, arrayObj, NULL);
     u8 val = arrData[idx];
-    env->ReleasePrimitiveArrayCritical(arrayObj, arrData, JNI_ABORT);
+    wrapper->ReleasePrimitiveArrayCritical(env, arrayObj, arrData, JNI_ABORT);
 
     SET_REGISTER_WIDE(vdst, val);
 })
@@ -1942,10 +1945,10 @@ HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", {
 
         ILOGV("+ AGET[%d]=%#x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));
 
-        jobject eleObj = env->GetObjectArrayElement(arrayObj, idx);
+        jobject eleObj = wrapper->GetObjectArrayElement(env, arrayObj, idx);
         SET_REGISTER_AS_OBJECT(vdst, eleObj);
 
-        if (env->ExceptionCheck()) {
+        if (wrapper->ExceptionCheck(env)) {
             GOTO_exceptionThrown();
         }
     }
@@ -1955,7 +1958,7 @@ HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", {
 /* File: c/OP_AGET_BOOLEAN.cpp */
 HANDLE_OP_AGET(OP_AGET_BOOLEAN, "-boolean", {
     jboolean val;
-    env->GetBooleanArrayRegion((jbooleanArray) arrayObj, idx, 1, &val);
+    wrapper->GetBooleanArrayRegion(env, (jbooleanArray) arrayObj, idx, 1, &val);
     SET_REGISTER(vdst, val);
 })
     OP_END
@@ -1963,7 +1966,7 @@ HANDLE_OP_AGET(OP_AGET_BOOLEAN, "-boolean", {
 /* File: c/OP_AGET_BYTE.cpp */
 HANDLE_OP_AGET(OP_AGET_BYTE, "-byte", {
     jbyte val;
-    env->GetByteArrayRegion((jbyteArray) arrayObj, idx, 1, &val);
+    wrapper->GetByteArrayRegion(env, (jbyteArray) arrayObj, idx, 1, &val);
     SET_REGISTER(vdst, val);
 })
     OP_END
@@ -1971,7 +1974,7 @@ HANDLE_OP_AGET(OP_AGET_BYTE, "-byte", {
 /* File: c/OP_AGET_CHAR.cpp */
 HANDLE_OP_AGET(OP_AGET_CHAR, "-char", {
     jchar val;
-    env->GetCharArrayRegion((jcharArray) arrayObj, idx, 1, &val);
+    wrapper->GetCharArrayRegion(env, (jcharArray) arrayObj, idx, 1, &val);
     SET_REGISTER(vdst, val);
 })
     OP_END
@@ -1979,35 +1982,35 @@ HANDLE_OP_AGET(OP_AGET_CHAR, "-char", {
 /* File: c/OP_AGET_SHORT.cpp */
 HANDLE_OP_AGET(OP_AGET_SHORT, "-short", {
     jshort val;
-    env->GetShortArrayRegion((jshortArray) arrayObj, idx, 1, &val);
+    wrapper->GetShortArrayRegion(env, (jshortArray) arrayObj, idx, 1, &val);
     SET_REGISTER(vdst, val);
 })
     OP_END
 
 /* File: c/OP_APUT.cpp */
 HANDLE_OP_APUT(OP_APUT, "", {
-    if (idx >= env->GetArrayLength(arrayObj)) {
+    if (idx >= wrapper->GetArrayLength(env, arrayObj)) {
         dvmThrowArrayIndexOutOfBoundsException(env,
-                                               env->GetArrayLength(arrayObj), idx);
+                                               wrapper->GetArrayLength(env, arrayObj), idx);
         GOTO_exceptionThrown();
     }
-    u4 *arrData = (u4 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
+    u4 *arrData = (u4 *) wrapper->GetPrimitiveArrayCritical(env, arrayObj, NULL);
     arrData[idx] = GET_REGISTER(vdst);
-    env->ReleasePrimitiveArrayCritical(arrayObj, arrData, 0);
+    wrapper->ReleasePrimitiveArrayCritical(env, arrayObj, arrData, 0);
 
 })
     OP_END
 
 /* File: c/OP_APUT_WIDE.cpp */
 HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", {
-    if (idx >= env->GetArrayLength(arrayObj)) {
+    if (idx >= wrapper->GetArrayLength(env, arrayObj)) {
         dvmThrowArrayIndexOutOfBoundsException(env,
-                                               env->GetArrayLength(arrayObj), idx);
+                                               wrapper->GetArrayLength(env, arrayObj), idx);
         GOTO_exceptionThrown();
     }
-    u8 *arrData = (u8 *) env->GetPrimitiveArrayCritical(arrayObj, NULL);
+    u8 *arrData = (u8 *) wrapper->GetPrimitiveArrayCritical(env, arrayObj, NULL);
     arrData[idx] = GET_REGISTER_WIDE(vdst);
-    env->ReleasePrimitiveArrayCritical(arrayObj, arrData, 0);
+    wrapper->ReleasePrimitiveArrayCritical(env, arrayObj, arrData, 0);
 })
     OP_END
 
@@ -2028,9 +2031,9 @@ HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", {
         }
         u4 idx = GET_REGISTER(vsrc2);
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER_AS_OBJECT(vdst));
-        env->SetObjectArrayElement(arrayObj, idx, GET_REGISTER_AS_OBJECT(vdst));
+        wrapper->SetObjectArrayElement(env, arrayObj, idx, GET_REGISTER_AS_OBJECT(vdst));
 
-        if (env->ExceptionCheck()) {
+        if (wrapper->ExceptionCheck(env)) {
             GOTO_exceptionThrown();
         }
     }
@@ -2040,38 +2043,38 @@ HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", {
 /* File: c/OP_APUT_BOOLEAN.cpp */
 HANDLE_OP_APUT(OP_APUT_BOOLEAN, "-boolean", {
     jboolean val = GET_REGISTER(vdst);
-    env->SetBooleanArrayRegion((jbooleanArray) arrayObj, idx, 1, &val);
+    wrapper->SetBooleanArrayRegion(env, (jbooleanArray) arrayObj, idx, 1, &val);
 })
     OP_END
 
 /* File: c/OP_APUT_BYTE.cpp */
 HANDLE_OP_APUT(OP_APUT_BYTE, "-byte", {
     jbyte val = GET_REGISTER(vdst);
-    env->SetByteArrayRegion((jbyteArray) arrayObj, idx, 1, &val);
+    wrapper->SetByteArrayRegion(env, (jbyteArray) arrayObj, idx, 1, &val);
 })
     OP_END
 
 /* File: c/OP_APUT_CHAR.cpp */
 HANDLE_OP_APUT(OP_APUT_CHAR, "-char", {
     jchar val = GET_REGISTER(vdst);
-    env->SetCharArrayRegion((jcharArray) arrayObj, idx, 1, &val);
+    wrapper->SetCharArrayRegion(env, (jcharArray) arrayObj, idx, 1, &val);
 })
     OP_END
 
 /* File: c/OP_APUT_SHORT.cpp */
 HANDLE_OP_APUT(OP_APUT_SHORT, "-short", {
     jshort val = GET_REGISTER(vdst);
-    env->SetShortArrayRegion((jshortArray) arrayObj, idx, 1, &val);
+    wrapper->SetShortArrayRegion(env, (jshortArray) arrayObj, idx, 1, &val);
 })
     OP_END
 
 /* File: c/OP_IGET.cpp */
 HANDLE_IGET_X(OP_IGET, "", {
     if (ifield->type == 'I') {
-        jint i = env->GetIntField(obj, ifield->fieldId);
+        jint i = wrapper->GetIntField(env, obj, ifield->fieldId);
         SET_REGISTER(vdst, i);
     } else {
-        jfloat f = env->GetFloatField(obj, ifield->fieldId);
+        jfloat f = wrapper->GetFloatField(env, obj, ifield->fieldId);
         SET_REGISTER_FLOAT(vdst, f);
     }
 },)
@@ -2080,10 +2083,10 @@ HANDLE_IGET_X(OP_IGET, "", {
 /* File: c/OP_IGET_WIDE.cpp */
 HANDLE_IGET_X(OP_IGET_WIDE, "-wide", {
     if (ifield->type == 'J') {
-        jlong j = env->GetLongField(obj, ifield->fieldId);
+        jlong j = wrapper->GetLongField(env, obj, ifield->fieldId);
         SET_REGISTER_WIDE(vdst, j);
     } else {
-        jdouble d = env->GetDoubleField(obj, ifield->fieldId);
+        jdouble d = wrapper->GetDoubleField(env, obj, ifield->fieldId);
         SET_REGISTER_DOUBLE(vdst, d);
     }
 }, _WIDE)
@@ -2092,35 +2095,35 @@ HANDLE_IGET_X(OP_IGET_WIDE, "-wide", {
 /* File: c/OP_IGET_OBJECT.cpp */
 HANDLE_IGET_X(OP_IGET_OBJECT, "-object", {
     //必须保证先获得field,不然寄存器vdst和vsrc1相同时,宏替换导致obj先失效,然后又使用了失效的obj从而导致错误
-    jobject objectField = env->GetObjectField(obj, ifield->fieldId);
+    jobject objectField = wrapper->GetObjectField(env, obj, ifield->fieldId);
     SET_REGISTER_AS_OBJECT(vdst, objectField);
 }, _AS_OBJECT)
     OP_END
 
 /* File: c/OP_IGET_BOOLEAN.cpp */
 HANDLE_IGET_X(OP_IGET_BOOLEAN, "", {
-    jboolean b = env->GetBooleanField(obj, ifield->fieldId);
+    jboolean b = wrapper->GetBooleanField(env, obj, ifield->fieldId);
     SET_REGISTER(vdst, b);
 },)
     OP_END
 
 /* File: c/OP_IGET_BYTE.cpp */
 HANDLE_IGET_X(OP_IGET_BYTE, "", {
-    jbyte b = env->GetByteField(obj, ifield->fieldId);
+    jbyte b = wrapper->GetByteField(env, obj, ifield->fieldId);
     SET_REGISTER(vdst, b);
 },)
     OP_END
 
 /* File: c/OP_IGET_CHAR.cpp */
 HANDLE_IGET_X(OP_IGET_CHAR, "", {
-    jchar c = env->GetCharField(obj, ifield->fieldId);
+    jchar c = wrapper->GetCharField(env, obj, ifield->fieldId);
     SET_REGISTER(vdst, c);
 },)
     OP_END
 
 /* File: c/OP_IGET_SHORT.cpp */
 HANDLE_IGET_X(OP_IGET_SHORT, "", {
-    jshort s = env->GetShortField(obj, ifield->fieldId);
+    jshort s = wrapper->GetShortField(env, obj, ifield->fieldId);
     SET_REGISTER(vdst, s);
 },)
     OP_END
@@ -2129,10 +2132,10 @@ HANDLE_IGET_X(OP_IGET_SHORT, "", {
 HANDLE_IPUT_X(OP_IPUT, "", {
     switch (ifield->type) {
         case 'I':
-            env->SetIntField(obj, ifield->fieldId, GET_REGISTER(vdst));
+            wrapper->SetIntField(env, obj, ifield->fieldId, GET_REGISTER(vdst));
             break;
         case 'F':
-            env->SetFloatField(obj, ifield->fieldId, GET_REGISTER_FLOAT(vdst));
+            wrapper->SetFloatField(env, obj, ifield->fieldId, GET_REGISTER_FLOAT(vdst));
             break;
     }
 },)
@@ -2142,10 +2145,10 @@ HANDLE_IPUT_X(OP_IPUT, "", {
 HANDLE_IPUT_X(OP_IPUT_WIDE, "-wide", {
     switch (ifield->type) {
         case 'J':
-            env->SetLongField(obj, ifield->fieldId, (jlong) GET_REGISTER_WIDE(vdst));
+            wrapper->SetLongField(env, obj, ifield->fieldId, (jlong) GET_REGISTER_WIDE(vdst));
             break;
         case 'D':
-            env->SetDoubleField(obj, ifield->fieldId, GET_REGISTER_DOUBLE(vdst));
+            wrapper->SetDoubleField(env, obj, ifield->fieldId, GET_REGISTER_DOUBLE(vdst));
             break;
     }
 }, _WIDE)
@@ -2153,40 +2156,40 @@ HANDLE_IPUT_X(OP_IPUT_WIDE, "-wide", {
 
 /* File: c/OP_IPUT_OBJECT.cpp */
 HANDLE_IPUT_X(OP_IPUT_OBJECT, "-object", {
-    env->SetObjectField(obj, ifield->fieldId, GET_REGISTER_AS_OBJECT(vdst));
+    wrapper->SetObjectField(env, obj, ifield->fieldId, GET_REGISTER_AS_OBJECT(vdst));
 }, _WIDE)
     OP_END
 
 /* File: c/OP_IPUT_BOOLEAN.cpp */
 HANDLE_IPUT_X(OP_IPUT_BOOLEAN, "", {
-    env->SetBooleanField(obj, ifield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetBooleanField(env, obj, ifield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_IPUT_BYTE.cpp */
 HANDLE_IPUT_X(OP_IPUT_BYTE, "", {
-    env->SetByteField(obj, ifield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetByteField(env, obj, ifield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_IPUT_CHAR.cpp */
 HANDLE_IPUT_X(OP_IPUT_CHAR, "", {
-    env->SetCharField(obj, ifield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetCharField(env, obj, ifield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_IPUT_SHORT.cpp */
 HANDLE_IPUT_X(OP_IPUT_SHORT, "", {
-    env->SetShortField(obj, ifield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetShortField(env, obj, ifield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_SGET.cpp */
 HANDLE_SGET_X(OP_SGET, "", {
     if (sfield->type == 'I') {
-        SET_REGISTER(vdst, env->GetStaticIntField(clazz.get(), sfield->fieldId));
+        SET_REGISTER(vdst, wrapper->GetStaticIntField(env, clazz.get(), sfield->fieldId));
     } else {
-        SET_REGISTER_FLOAT(vdst, env->GetStaticFloatField(clazz.get(), sfield->fieldId));
+        SET_REGISTER_FLOAT(vdst, wrapper->GetStaticFloatField(env, clazz.get(), sfield->fieldId));
     }
 },)
     OP_END
@@ -2194,40 +2197,40 @@ HANDLE_SGET_X(OP_SGET, "", {
 /* File: c/OP_SGET_WIDE.cpp */
 HANDLE_SGET_X(OP_SGET_WIDE, "-wide", {
     if (sfield->type == 'J') {
-        SET_REGISTER_WIDE(vdst, env->GetStaticLongField(clazz.get(), sfield->fieldId));
+        SET_REGISTER_WIDE(vdst, wrapper->GetStaticLongField(env, clazz.get(), sfield->fieldId));
     } else {
-        SET_REGISTER_DOUBLE(vdst, env->GetStaticDoubleField(clazz.get(), sfield->fieldId));
+        SET_REGISTER_DOUBLE(vdst, wrapper->GetStaticDoubleField(env, clazz.get(), sfield->fieldId));
     }
 }, _WIDE)
     OP_END
 
 /* File: c/OP_SGET_OBJECT.cpp */
 HANDLE_SGET_X(OP_SGET_OBJECT, "-object", {
-    SET_REGISTER_AS_OBJECT(vdst, env->GetStaticObjectField(clazz.get(), sfield->fieldId));
+    SET_REGISTER_AS_OBJECT(vdst, wrapper->GetStaticObjectField(env, clazz.get(), sfield->fieldId));
 }, _AS_OBJECT)
     OP_END
 
 /* File: c/OP_SGET_BOOLEAN.cpp */
 HANDLE_SGET_X(OP_SGET_BOOLEAN, "", {
-    SET_REGISTER(vdst, env->GetStaticBooleanField(clazz.get(), sfield->fieldId));
+    SET_REGISTER(vdst, wrapper->GetStaticBooleanField(env, clazz.get(), sfield->fieldId));
 },)
     OP_END
 
 /* File: c/OP_SGET_BYTE.cpp */
 HANDLE_SGET_X(OP_SGET_BYTE, "", {
-    SET_REGISTER(vdst, env->GetStaticByteField(clazz.get(), sfield->fieldId));
+    SET_REGISTER(vdst, wrapper->GetStaticByteField(env, clazz.get(), sfield->fieldId));
 },)
     OP_END
 
 /* File: c/OP_SGET_CHAR.cpp */
 HANDLE_SGET_X(OP_SGET_CHAR, "", {
-    SET_REGISTER(vdst, env->GetStaticCharField(clazz.get(), sfield->fieldId));
+    SET_REGISTER(vdst, wrapper->GetStaticCharField(env, clazz.get(), sfield->fieldId));
 },)
     OP_END
 
 /* File: c/OP_SGET_SHORT.cpp */
 HANDLE_SGET_X(OP_SGET_SHORT, "", {
-    SET_REGISTER(vdst, env->GetStaticShortField(clazz.get(), sfield->fieldId));
+    SET_REGISTER(vdst, wrapper->GetStaticShortField(env, clazz.get(), sfield->fieldId));
 },)
     OP_END
 
@@ -2235,10 +2238,11 @@ HANDLE_SGET_X(OP_SGET_SHORT, "", {
 HANDLE_SPUT_X(OP_SPUT, "", {
     switch (sfield->type) {
         case 'I':
-            env->SetStaticIntField(clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
+            wrapper->SetStaticIntField(env, clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
             break;
         case 'F':
-            env->SetStaticFloatField(clazz.get(), sfield->fieldId, GET_REGISTER_FLOAT(vdst));
+            wrapper->SetStaticFloatField(env, clazz.get(), sfield->fieldId,
+                                         GET_REGISTER_FLOAT(vdst));
             break;
     }
 },)
@@ -2249,10 +2253,11 @@ HANDLE_SPUT_X(OP_SPUT, "", {
 HANDLE_SPUT_X(OP_SPUT_WIDE, "-wide", {
     switch (sfield->type) {
         case 'J':
-            env->SetStaticLongField(clazz.get(), sfield->fieldId, GET_REGISTER_WIDE(vdst));
+            wrapper->SetStaticLongField(env, clazz.get(), sfield->fieldId, GET_REGISTER_WIDE(vdst));
             break;
         case 'D':
-            env->SetStaticDoubleField(clazz.get(), sfield->fieldId, GET_REGISTER_DOUBLE(vdst));
+            wrapper->SetStaticDoubleField(env, clazz.get(), sfield->fieldId,
+                                          GET_REGISTER_DOUBLE(vdst));
             break;
     }
 }, _WIDE)
@@ -2260,31 +2265,31 @@ HANDLE_SPUT_X(OP_SPUT_WIDE, "-wide", {
 
 /* File: c/OP_SPUT_OBJECT.cpp */
 HANDLE_SPUT_X(OP_SPUT_OBJECT, "-object", {
-    env->SetStaticObjectField(clazz.get(), sfield->fieldId, GET_REGISTER_AS_OBJECT(vdst));
+    wrapper->SetStaticObjectField(env, clazz.get(), sfield->fieldId, GET_REGISTER_AS_OBJECT(vdst));
 }, _AS_OBJECT)
     OP_END
 
 /* File: c/OP_SPUT_BOOLEAN.cpp */
 HANDLE_SPUT_X(OP_SPUT_BOOLEAN, "", {
-    env->SetStaticBooleanField(clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetStaticBooleanField(env, clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_SPUT_BYTE.cpp */
 HANDLE_SPUT_X(OP_SPUT_BYTE, "", {
-    env->SetStaticByteField(clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetStaticByteField(env, clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_SPUT_CHAR.cpp */
 HANDLE_SPUT_X(OP_SPUT_CHAR, "", {
-    env->SetStaticCharField(clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetStaticCharField(env, clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
 },)
     OP_END
 
 /* File: c/OP_SPUT_SHORT.cpp */
 HANDLE_SPUT_X(OP_SPUT_SHORT, "", {
-    env->SetStaticShortField(clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
+    wrapper->SetStaticShortField(env, clazz.get(), sfield->fieldId, GET_REGISTER(vdst));
 
 },)
     OP_END
@@ -3039,67 +3044,67 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
                 {
                     switch (returnCh) {
                         case 'Z':
-                            retval.i = env->CallBooleanMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallBooleanMethodA(env,
+                                                                   thisPtr,
+                                                                   methodToCall->methodId,
+                                                                   args + 1);
                             break;
                         case 'B':
-                            retval.i = env->CallByteMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallByteMethodA(env,
+                                                                thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'C':
-                            retval.i = env->CallCharMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallCharMethodA(env,
+                                                                thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'S':
-                            retval.i = env->CallShortMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallShortMethodA(env,
+                                                                 thisPtr,
+                                                                 methodToCall->methodId,
+                                                                 args + 1);
                             break;
                         case 'I':
-                            retval.i = env->CallIntMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallIntMethodA(env,
+                                                               thisPtr,
+                                                               methodToCall->methodId,
+                                                               args + 1);
                             break;
                         case 'F':
-                            retval.f = env->CallFloatMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.f = wrapper->CallFloatMethodA(env,
+                                                                 thisPtr,
+                                                                 methodToCall->methodId,
+                                                                 args + 1);
                             break;
                         case 'J':
-                            retval.j = env->CallLongMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.j = wrapper->CallLongMethodA(env,
+                                                                thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'D':
-                            retval.d = env->CallDoubleMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.d = wrapper->CallDoubleMethodA(env,
+                                                                  thisPtr,
+                                                                  methodToCall->methodId,
+                                                                  args + 1);
                             break;
                         case 'L':
-                            retval.l = env->CallObjectMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.l = wrapper->CallObjectMethodA(env,
+                                                                  thisPtr,
+                                                                  methodToCall->methodId,
+                                                                  args + 1);
                             if (INST_INST(FETCH(3)) != OP_MOVE_RESULT_OBJECT) {
-                                if (retval.l != NULL) env->DeleteLocalRef(retval.l);
+                                if (retval.l != NULL) wrapper->DeleteLocalRef(env, retval.l);
                             }
                             break;
                         case 'V':
-                            env->CallVoidMethodA(
-                                    thisPtr,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            wrapper->CallVoidMethodA(env,
+                                                     thisPtr,
+                                                     methodToCall->methodId,
+                                                     args + 1);
                             break;
                         default:;
                     }
@@ -3142,81 +3147,81 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
                     jclass clazz = dvmResolver->dvmResolveClass(env, methodToCall->classIdx);
                     switch (returnCh) {
                         case 'Z':
-                            retval.i = env->CallNonvirtualBooleanMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualBooleanMethodA(env,
+                                                                             thisPtr,
+                                                                             clazz,
+                                                                             methodToCall->methodId,
+                                                                             args + 1);
                             break;
                         case 'B':
-                            retval.i = env->CallNonvirtualByteMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualByteMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'C':
-                            retval.i = env->CallNonvirtualCharMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualCharMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'S':
-                            retval.i = env->CallNonvirtualShortMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualShortMethodA(env,
+                                                                           thisPtr,
+                                                                           clazz,
+                                                                           methodToCall->methodId,
+                                                                           args + 1);
                             break;
                         case 'I':
-                            retval.i = env->CallNonvirtualIntMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualIntMethodA(env,
+                                                                         thisPtr,
+                                                                         clazz,
+                                                                         methodToCall->methodId,
+                                                                         args + 1);
                             break;
                         case 'F':
-                            retval.f = env->CallNonvirtualFloatMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.f = wrapper->CallNonvirtualFloatMethodA(env,
+                                                                           thisPtr,
+                                                                           clazz,
+                                                                           methodToCall->methodId,
+                                                                           args + 1);
                             break;
                         case 'J':
-                            retval.j = env->CallNonvirtualLongMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.j = wrapper->CallNonvirtualLongMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'D':
-                            retval.d = env->CallNonvirtualDoubleMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.d = wrapper->CallNonvirtualDoubleMethodA(env,
+                                                                            thisPtr,
+                                                                            clazz,
+                                                                            methodToCall->methodId,
+                                                                            args + 1);
                             break;
                         case 'L':
-                            retval.l = env->CallNonvirtualObjectMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.l = wrapper->CallNonvirtualObjectMethodA(env,
+                                                                            thisPtr,
+                                                                            clazz,
+                                                                            methodToCall->methodId,
+                                                                            args + 1);
                             if (INST_INST(FETCH(3)) != OP_MOVE_RESULT_OBJECT) {
-                                if (retval.l != NULL) env->DeleteLocalRef(retval.l);
+                                if (retval.l != NULL) wrapper->DeleteLocalRef(env, retval.l);
                             }
                             break;
                         case 'V':
-                            env->CallNonvirtualVoidMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            wrapper->CallNonvirtualVoidMethodA(env,
+                                                               thisPtr,
+                                                               clazz,
+                                                               methodToCall->methodId,
+                                                               args + 1);
                             break;
                         default:;
                     }
-                    env->DeleteLocalRef(clazz);
+                    wrapper->DeleteLocalRef(env, clazz);
 
                 });
 
@@ -3261,46 +3266,55 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
                 {
                     switch (returnCh) {
                         case 'Z':
-                            retval.i = env->CallBooleanMethodA(thisPtr, methodToCall->methodId,
-                                                               args + 1);
+                            retval.i = wrapper->CallBooleanMethodA(env, thisPtr,
+                                                                   methodToCall->methodId,
+                                                                   args + 1);
                             break;
                         case 'B':
-                            retval.i = env->CallByteMethodA(thisPtr, methodToCall->methodId,
-                                                            args + 1);
+                            retval.i = wrapper->CallByteMethodA(env, thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'C':
-                            retval.i = env->CallCharMethodA(thisPtr, methodToCall->methodId,
-                                                            args + 1);
+                            retval.i = wrapper->CallCharMethodA(env, thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'S':
-                            retval.i = env->CallShortMethodA(thisPtr, methodToCall->methodId,
-                                                             args + 1);
+                            retval.i = wrapper->CallShortMethodA(env, thisPtr,
+                                                                 methodToCall->methodId,
+                                                                 args + 1);
                             break;
                         case 'I':
-                            retval.i = env->CallIntMethodA(thisPtr, methodToCall->methodId,
-                                                           args + 1);
+                            retval.i = wrapper->CallIntMethodA(env, thisPtr, methodToCall->methodId,
+                                                               args + 1);
                             break;
                         case 'F':
-                            retval.f = env->CallFloatMethodA(thisPtr, methodToCall->methodId,
-                                                             args + 1);
+                            retval.f = wrapper->CallFloatMethodA(env, thisPtr,
+                                                                 methodToCall->methodId,
+                                                                 args + 1);
                             break;
                         case 'J':
-                            retval.j = env->CallLongMethodA(thisPtr, methodToCall->methodId,
-                                                            args + 1);
+                            retval.j = wrapper->CallLongMethodA(env, thisPtr,
+                                                                methodToCall->methodId,
+                                                                args + 1);
                             break;
                         case 'D':
-                            retval.d = env->CallDoubleMethodA(thisPtr, methodToCall->methodId,
-                                                              args + 1);
+                            retval.d = wrapper->CallDoubleMethodA(env, thisPtr,
+                                                                  methodToCall->methodId,
+                                                                  args + 1);
                             break;
                         case 'L':
-                            retval.l = env->CallObjectMethodA(thisPtr, methodToCall->methodId,
-                                                              args + 1);
+                            retval.l = wrapper->CallObjectMethodA(env, thisPtr,
+                                                                  methodToCall->methodId,
+                                                                  args + 1);
                             if (INST_INST(FETCH(3)) != OP_MOVE_RESULT_OBJECT) {
-                                if (retval.l != NULL) env->DeleteLocalRef(retval.l);
+                                if (retval.l != NULL) wrapper->DeleteLocalRef(env, retval.l);
                             }
                             break;
                         case 'V':
-                            env->CallVoidMethodA(thisPtr, methodToCall->methodId, args + 1);
+                            wrapper->CallVoidMethodA(env, thisPtr, methodToCall->methodId,
+                                                     args + 1);
                             break;
                         default:;
                     }
@@ -3343,82 +3357,82 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
                     jclass clazz = dvmResolver->dvmResolveClass(env, methodToCall->classIdx);
                     switch (returnCh) {
                         case 'Z':
-                            retval.i = env->CallNonvirtualBooleanMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualBooleanMethodA(env,
+                                                                             thisPtr,
+                                                                             clazz,
+                                                                             methodToCall->methodId,
+                                                                             args + 1);
                             break;
                         case 'B':
-                            retval.i = env->CallNonvirtualByteMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualByteMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'C':
-                            retval.i = env->CallNonvirtualCharMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualCharMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'S':
-                            retval.i = env->CallNonvirtualShortMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualShortMethodA(env,
+                                                                           thisPtr,
+                                                                           clazz,
+                                                                           methodToCall->methodId,
+                                                                           args + 1);
                             break;
                         case 'I':
-                            retval.i = env->CallNonvirtualIntMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.i = wrapper->CallNonvirtualIntMethodA(env,
+                                                                         thisPtr,
+                                                                         clazz,
+                                                                         methodToCall->methodId,
+                                                                         args + 1);
                             break;
                         case 'F':
-                            retval.f = env->CallNonvirtualFloatMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.f = wrapper->CallNonvirtualFloatMethodA(env,
+                                                                           thisPtr,
+                                                                           clazz,
+                                                                           methodToCall->methodId,
+                                                                           args + 1);
                             break;
                         case 'J':
-                            retval.j = env->CallNonvirtualLongMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.j = wrapper->CallNonvirtualLongMethodA(env,
+                                                                          thisPtr,
+                                                                          clazz,
+                                                                          methodToCall->methodId,
+                                                                          args + 1);
                             break;
                         case 'D':
-                            retval.d = env->CallNonvirtualDoubleMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.d = wrapper->CallNonvirtualDoubleMethodA(env,
+                                                                            thisPtr,
+                                                                            clazz,
+                                                                            methodToCall->methodId,
+                                                                            args + 1);
                             break;
                         case 'L':
-                            retval.l = env->CallNonvirtualObjectMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            retval.l = wrapper->CallNonvirtualObjectMethodA(env,
+                                                                            thisPtr,
+                                                                            clazz,
+                                                                            methodToCall->methodId,
+                                                                            args + 1);
 
                             if (INST_INST(FETCH(3)) != OP_MOVE_RESULT_OBJECT) {
-                                if (retval.l != NULL) env->DeleteLocalRef(retval.l);
+                                if (retval.l != NULL) wrapper->DeleteLocalRef(env, retval.l);
                             }
                             break;
                         case 'V':
-                            env->CallNonvirtualVoidMethodA(
-                                    thisPtr,
-                                    clazz,
-                                    methodToCall->methodId,
-                                    args + 1);
+                            wrapper->CallNonvirtualVoidMethodA(env,
+                                                               thisPtr,
+                                                               clazz,
+                                                               methodToCall->methodId,
+                                                               args + 1);
                             break;
                         default:;
                     }
-                    env->DeleteLocalRef(clazz);
+                    wrapper->DeleteLocalRef(env, clazz);
 
                 });
 
@@ -3450,59 +3464,60 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
                     jclass clazz = dvmResolver->dvmResolveClass(env, methodToCall->classIdx);
                     switch (returnCh) {
                         case 'Z':
-                            retval.i = env->CallStaticBooleanMethodA(clazz,
+                            retval.i = wrapper->CallStaticBooleanMethodA(env, clazz,
+                                                                         methodToCall->methodId,
+                                                                         args);
+                            break;
+                        case 'B':
+                            retval.i = wrapper->CallStaticByteMethodA(env, clazz,
+                                                                      methodToCall->methodId,
+                                                                      args);
+                            break;
+                        case 'C':
+                            retval.i = wrapper->CallStaticCharMethodA(env, clazz,
+                                                                      methodToCall->methodId,
+                                                                      args);
+                            break;
+                        case 'S':
+                            retval.i = wrapper->CallStaticShortMethodA(env, clazz,
+                                                                       methodToCall->methodId,
+                                                                       args);
+                            break;
+                        case 'I':
+                            retval.i = wrapper->CallStaticIntMethodA(env, clazz,
                                                                      methodToCall->methodId,
                                                                      args);
                             break;
-                        case 'B':
-                            retval.i = env->CallStaticByteMethodA(clazz,
-                                                                  methodToCall->methodId,
-                                                                  args);
-                            break;
-                        case 'C':
-                            retval.i = env->CallStaticCharMethodA(clazz,
-                                                                  methodToCall->methodId,
-                                                                  args);
-                            break;
-                        case 'S':
-                            retval.i = env->CallStaticShortMethodA(clazz,
-                                                                   methodToCall->methodId,
-                                                                   args);
-                            break;
-                        case 'I':
-                            retval.i = env->CallStaticIntMethodA(clazz,
-                                                                 methodToCall->methodId,
-                                                                 args);
-                            break;
                         case 'F':
-                            retval.f = env->CallStaticFloatMethodA(clazz,
-                                                                   methodToCall->methodId,
-                                                                   args);
+                            retval.f = wrapper->CallStaticFloatMethodA(env, clazz,
+                                                                       methodToCall->methodId,
+                                                                       args);
                             break;
                         case 'J':
-                            retval.j = env->CallStaticLongMethodA(clazz,
-                                                                  methodToCall->methodId,
-                                                                  args);
+                            retval.j = wrapper->CallStaticLongMethodA(env, clazz,
+                                                                      methodToCall->methodId,
+                                                                      args);
                             break;
                         case 'D':
-                            retval.d = env->CallStaticDoubleMethodA(clazz,
-                                                                    methodToCall->methodId,
-                                                                    args);
+                            retval.d = wrapper->CallStaticDoubleMethodA(env, clazz,
+                                                                        methodToCall->methodId,
+                                                                        args);
                             break;
                         case 'L':
-                            retval.l = env->CallStaticObjectMethodA(clazz,
-                                                                    methodToCall->methodId,
-                                                                    args);
+                            retval.l = wrapper->CallStaticObjectMethodA(env, clazz,
+                                                                        methodToCall->methodId,
+                                                                        args);
                             if (INST_INST(FETCH(3)) != OP_MOVE_RESULT_OBJECT) {
-                                if (retval.l != NULL) env->DeleteLocalRef(retval.l);
+                                if (retval.l != NULL) wrapper->DeleteLocalRef(env, retval.l);
                             }
                             break;
                         case 'V':
-                            env->CallStaticVoidMethodA(clazz, methodToCall->methodId, args);
+                            wrapper->CallStaticVoidMethodA(env, clazz, methodToCall->methodId,
+                                                           args);
                             break;
                         default:;
                     }
-                    env->DeleteLocalRef(clazz);
+                    wrapper->DeleteLocalRef(env, clazz);
 
                 });
     }
@@ -3533,8 +3548,8 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
 
         PERIODIC_CHECKS(0);
 
-        ScopedLocalRef<jthrowable> exception(env, env->ExceptionOccurred());
-        env->ExceptionClear();
+        ScopedLocalRef<jthrowable> exception(env, wrapper->ExceptionOccurred(env));
+        wrapper->ExceptionClear(env);
         ILOGV("Handling exception %p at :%d",
               exception.get(), (pc - code->insns));
 
@@ -3559,7 +3574,7 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
 
         if (catchRelPc < 0) {
 /* falling through to JNI code or off the bottom of the stack */
-            env->Throw(exception.get());
+            wrapper->Throw(env, exception.get());
             GOTO_bail();
         }
         pc = code->insns + catchRelPc;
@@ -3577,7 +3592,7 @@ HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8, "ushr", (u4), >>)
  * finish here with an exception still pending.
  */
         if (INST_INST(FETCH(0)) == OP_MOVE_EXCEPTION) {
-            env->Throw(exception.get());
+            wrapper->Throw(env, exception.get());
         }
 
     }

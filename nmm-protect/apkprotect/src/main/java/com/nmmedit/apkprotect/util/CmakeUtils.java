@@ -6,7 +6,10 @@ import com.nmmedit.apkprotect.sign.ApkVerifyCodeGenerator;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -100,7 +103,76 @@ public class CmakeUtils {
             } else if (source.getName().equals("CMakeLists.txt")) {
                 //处理cmake里配置的本地库名
                 writeCmakeFile(source, BuildNativeLib.NMMP_NAME);
+            } else if (source.getName().endsWith("vm.h")) {
+                writeRandomResolver(source);
+            } else if (source.getName().endsWith("JNIWrapper.h")) {
+                writeRandomJNIWrapper(source);
             }
         }
+    }
+
+    private static void writeRandomResolver(File source) throws IOException {
+        final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(source), StandardCharsets.UTF_8));
+        String lines = bufferedReader.lines().collect(Collectors.joining("\n"));
+        final Pattern p = Pattern.compile("typedef struct \\{([^}]*?)} vmResolver;", Pattern.MULTILINE | Pattern.DOTALL);
+        final Matcher matcherResolver = p.matcher(lines);
+        if (matcherResolver.find()) {
+            final String body = matcherResolver.group(1);
+            //match function pointer
+            final Pattern funcPattern = Pattern.compile("([^();]* \\**\\(\\*[a-zA-z0-9]*\\)\\([^();]*\\);)", Pattern.MULTILINE | Pattern.DOTALL);
+            final ArrayList<String> funcs = new ArrayList<>();
+            final Matcher matcher = funcPattern.matcher(body);
+            while (matcher.find()) {
+                funcs.add(matcher.group(1));
+            }
+
+
+            try (FileWriter fileWriter = new FileWriter(source)) {
+                final String doc = matcherResolver.replaceAll("typedef struct {\n" +
+                        randomList(funcs) +
+                        "} vmResolver;");
+                fileWriter.write(doc);
+            }
+        }
+    }
+
+    private static void writeRandomJNIWrapper(File file) throws IOException {
+        final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(file), StandardCharsets.UTF_8));
+        String lines = bufferedReader.lines().collect(Collectors.joining("\n"));
+        final Pattern p = Pattern.compile("typedef struct \\{([^}]*?)} JNIWrapper;", Pattern.MULTILINE | Pattern.DOTALL);
+        final Matcher matcherWrapper = p.matcher(lines);
+        if (matcherWrapper.find()) {
+            final String body = matcherWrapper.group(1);
+            //match function pointer
+            final Pattern funcPattern = Pattern.compile("([^();]* \\**\\(\\*[a-zA-z0-9]*\\)\\([^();]*\\);)", Pattern.MULTILINE | Pattern.DOTALL);
+            final ArrayList<String> funcs = new ArrayList<>();
+            final Matcher matcher = funcPattern.matcher(body);
+            while (matcher.find()) {
+                funcs.add(matcher.group(1));
+            }
+
+
+            try (FileWriter fileWriter = new FileWriter(file)) {
+                final String doc = matcherWrapper.replaceAll("typedef struct {\n" +
+                        randomList(funcs) +
+                        "} JNIWrapper;");
+                fileWriter.write(doc);
+            }
+        }
+    }
+
+    private static String randomList(List<String> list) {
+        final StringBuilder sb = new StringBuilder();
+        final int size = list.size();
+        for (int i = 0; i < size; i++) {
+            final Random random = new Random();
+            final int idx = random.nextInt(list.size());
+            sb.append(list.get(idx));
+            sb.append('\n');
+            list.remove(idx);
+        }
+        return sb.toString();
     }
 }
