@@ -6,6 +6,14 @@
 #define DEX_EDITOR_JNIWRAPPER_H
 #include <jni.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
+
 typedef struct {
     jint        (*Throw)(JNIEnv*, jthrowable);
     jthrowable  (*ExceptionOccurred)(JNIEnv*);
@@ -162,6 +170,13 @@ typedef struct {
 
 } JNIWrapper;
 
-const JNIWrapper * getJNIWrapper();
+
+const JNIWrapper *getJNIWrapper();
+
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //DEX_EDITOR_JNIWRAPPER_H

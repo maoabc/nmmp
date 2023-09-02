@@ -12,7 +12,7 @@ set(VM_SRC_FILES
         Interp.cpp
         InterpC-portable.cpp
         GlobalCache.cpp
-        JNIWrapper.cpp
+        JNIWrapper.c
 
         )
 
