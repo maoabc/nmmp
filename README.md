@@ -23,6 +23,8 @@ java -jar vm-protect-xxx.jar apk input.apk convertRules.txt mapping.txt
 执行完毕会在input.apk所在的目录下生成一个build目录，里面包含最后输出的apk(build/input-protect.apk)，完整的c项目dex2c(基于cmake)及处理过程中生成的.dex等。  
 第一次运行后会在jar位置生成tools目录，里面有config.json可以编辑它配置安卓sdk，ndk相关路径。
 
+有朋友写了个GUI界面，能更方便使用，需要的可以去试试，https://github.com/TimScriptov/nmmp
+
 生成的apk需要使用zipalign对齐（新版本已使用zipflinger处理apk,可以不用使用单独的zipalign）及apksigner签名才能安装使用
 ``` bash
 apksigner sign --ks ~/.myapp.jks build/input-protect-align.apk
