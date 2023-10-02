@@ -27,8 +27,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class ApkProtect {
 
@@ -178,14 +176,13 @@ public class ApkProtect {
     //根据apk里文件得到abi，如果没有本地库则返回所有
     private static List<String> getAbis(File apk) throws IOException {
         final Pattern pattern = Pattern.compile("lib/(.*)/.*\\.so");
-        final ZipFile zipFile = new ZipFile(apk);
-        final Enumeration<? extends ZipEntry> entries = zipFile.entries();
         Set<String> abis = new HashSet<>();
-        while (entries.hasMoreElements()) {
-            final ZipEntry entry = entries.nextElement();
-            final Matcher matcher = pattern.matcher(entry.getName());
-            if (matcher.matches()) {
-                abis.add(matcher.group(1));
+        try (ZipArchive zipArchive = new ZipArchive(apk.toPath())) {
+            for (String entry : zipArchive.listEntries()) {
+                final Matcher matcher = pattern.matcher(entry);
+                if (matcher.matches()) {
+                    abis.add(matcher.group(1));
+                }
             }
         }
         //不支持armeabi，可能还要删除mips相关
