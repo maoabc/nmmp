@@ -22,8 +22,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class AabProtect {
     public static final String ANDROID_MANIFEST_XML = "base/manifest/AndroidManifest.xml";
@@ -221,17 +219,16 @@ public class AabProtect {
         outArchive.add(zipSource);
     }
 
-    //根据aab文件得到abi，如果没有本地库则返回x86及arm所有abi
+    //根据aab文件得到abi，如果没有本地库则返回四个abi
     private static List<String> getAbis(File aab) throws IOException {
         final Pattern pattern = Pattern.compile("base/lib/(.*)/.*\\.so");
-        final ZipFile zipFile = new ZipFile(aab);
-        final Enumeration<? extends ZipEntry> entries = zipFile.entries();
         Set<String> abis = new HashSet<>();
-        while (entries.hasMoreElements()) {
-            final ZipEntry entry = entries.nextElement();
-            final Matcher matcher = pattern.matcher(entry.getName());
-            if (matcher.matches()) {
-                abis.add(matcher.group(1));
+        try (ZipArchive zipArchive = new ZipArchive(aab.toPath())) {
+            for (String entry : zipArchive.listEntries()) {
+                final Matcher matcher = pattern.matcher(entry);
+                if (matcher.matches()) {
+                    abis.add(matcher.group(1));
+                }
             }
         }
         //不支持armeabi，可能还要删除mips相关
