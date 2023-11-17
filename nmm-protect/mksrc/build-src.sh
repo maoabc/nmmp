@@ -8,8 +8,9 @@ VM_SRC="vm cutils ConstantPool.c ConstantPool.h"
 
 OUT="`pwd`/../apkprotect/src/main/resources/vmsrc.zip"
 
-pushd ${VM_DIR}&&zip -0 -r -D ${OUT} ${VM_SRC}
-popd
+pushd ${VM_DIR}&&zip -0 -r -D ${OUT} ${VM_SRC}&&popd
+
+zip -0 -u -D ${OUT}  vm/CMakeLists.txt
 
 zip -0 -u -D ${OUT}  CMakeLists.txt
 
