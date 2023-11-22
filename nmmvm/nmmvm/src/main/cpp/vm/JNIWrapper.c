@@ -205,7 +205,7 @@ CallStaticObjectMethodA(JNIEnv *env, jclass cls, jmethodID methodId, const jvalu
 
 static jboolean
 CallStaticBooleanMethodA(JNIEnv *env, jclass cls, jmethodID methodId, const jvalue *v) {
-    return (*env)->CallStaticByteMethodA(env, cls, methodId, v);
+    return (*env)->CallStaticBooleanMethodA(env, cls, methodId, v);
 }
 
 static jbyte CallStaticByteMethodA(JNIEnv *env, jclass cls, jmethodID methodId, const jvalue *v) {
