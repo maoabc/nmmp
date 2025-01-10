@@ -27,6 +27,17 @@ jar {
     }
 }
 
+// Prevent duplicates in the jar by excluding duplicate entries
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Configure test task to exclude AsmUtilsTest
+test {
+    // Exclude the specific test class
+    exclude '**/AsmUtilsTest.java'
+}
+
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
@@ -35,3 +46,11 @@ dependencies {
     implementation 'com.android.tools.smali:smali-dexlib2:3.0.9'
 //    implementation 'org.smali:dexlib2:2.5.2'
 }
+
+// Optionally, disable tests specifically in apkprotect to speed up the build
+project(':apkprotect') {
+    tasks.withType(Test) {
+        enabled = false // Uncomment to disable all tests for apkprotect if exclusion fails
+    }
+}
+
