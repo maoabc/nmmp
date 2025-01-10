@@ -1,6 +1,7 @@
 package com.nmmedit.apkprotect.aar;
 
 import com.android.tools.r8.D8;
+import com.android.tools.smali.dexlib2.iface.Method;
 import com.android.zipflinger.*;
 import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.BuildNativeLib;
@@ -16,7 +17,6 @@ import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRew
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import com.nmmedit.apkprotect.util.CmakeUtils;
 import com.nmmedit.apkprotect.util.FileUtils;
-import org.jf.dexlib2.iface.Method;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;

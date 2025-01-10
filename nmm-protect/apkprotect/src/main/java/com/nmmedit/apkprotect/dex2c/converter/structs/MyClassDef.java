@@ -1,12 +1,12 @@
 package com.nmmedit.apkprotect.dex2c.converter.structs;
 
 
+import com.android.tools.smali.dexlib2.base.reference.BaseTypeReference;
+import com.android.tools.smali.dexlib2.iface.Annotation;
+import com.android.tools.smali.dexlib2.iface.ClassDef;
+import com.android.tools.smali.dexlib2.iface.Field;
+import com.android.tools.smali.dexlib2.iface.Method;
 import com.google.common.collect.Iterators;
-import org.jf.dexlib2.base.reference.BaseTypeReference;
-import org.jf.dexlib2.iface.Annotation;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.Field;
-import org.jf.dexlib2.iface.Method;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

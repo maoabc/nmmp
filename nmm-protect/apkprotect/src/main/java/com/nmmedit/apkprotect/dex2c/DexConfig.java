@@ -1,8 +1,8 @@
 package com.nmmedit.apkprotect.dex2c;
 
+import com.android.tools.smali.dexlib2.iface.Method;
 import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
-import org.jf.dexlib2.iface.Method;
 
 import javax.annotation.Nonnull;
 import java.io.File;

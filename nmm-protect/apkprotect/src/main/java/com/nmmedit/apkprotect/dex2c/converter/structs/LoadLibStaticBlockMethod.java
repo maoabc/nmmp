@@ -1,19 +1,19 @@
 package com.nmmedit.apkprotect.dex2c.converter.structs;
 
-import org.jf.dexlib2.AccessFlags;
-import org.jf.dexlib2.HiddenApiRestriction;
-import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.base.reference.BaseMethodReference;
-import org.jf.dexlib2.builder.MutableMethodImplementation;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
-import org.jf.dexlib2.iface.Annotation;
-import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.iface.MethodImplementation;
-import org.jf.dexlib2.iface.MethodParameter;
-import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
-import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
+import com.android.tools.smali.dexlib2.AccessFlags;
+import com.android.tools.smali.dexlib2.HiddenApiRestriction;
+import com.android.tools.smali.dexlib2.Opcode;
+import com.android.tools.smali.dexlib2.base.reference.BaseMethodReference;
+import com.android.tools.smali.dexlib2.builder.MutableMethodImplementation;
+import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction10x;
+import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c;
+import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction35c;
+import com.android.tools.smali.dexlib2.iface.Annotation;
+import com.android.tools.smali.dexlib2.iface.Method;
+import com.android.tools.smali.dexlib2.iface.MethodImplementation;
+import com.android.tools.smali.dexlib2.iface.MethodParameter;
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference;
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

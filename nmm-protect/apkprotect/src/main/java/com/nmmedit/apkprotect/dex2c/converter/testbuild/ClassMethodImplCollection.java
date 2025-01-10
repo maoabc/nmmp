@@ -1,8 +1,8 @@
 package com.nmmedit.apkprotect.dex2c.converter.testbuild;
 
+import com.android.tools.smali.dexlib2.iface.*;
+import com.android.tools.smali.dexlib2.util.MethodUtil;
 import com.nmmedit.apkprotect.dex2c.converter.MyMethodUtil;
-import org.jf.dexlib2.iface.*;
-import org.jf.dexlib2.util.MethodUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

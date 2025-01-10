@@ -1,5 +1,12 @@
 package com.nmmedit.apkprotect.dex2c;
 
+import com.android.tools.smali.dexlib2.Opcodes;
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
+import com.android.tools.smali.dexlib2.iface.ClassDef;
+import com.android.tools.smali.dexlib2.iface.Method;
+import com.android.tools.smali.dexlib2.util.MethodUtil;
+import com.android.tools.smali.dexlib2.writer.io.FileDataStore;
+import com.android.tools.smali.dexlib2.writer.pool.DexPool;
 import com.google.common.collect.HashMultimap;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.JniCodeGenerator;
@@ -9,13 +16,6 @@ import com.nmmedit.apkprotect.dex2c.converter.structs.MyClassDef;
 import com.nmmedit.apkprotect.dex2c.converter.structs.RegisterNativesCallerClassDef;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import com.nmmedit.apkprotect.util.Pair;
-import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.util.MethodUtil;
-import org.jf.dexlib2.writer.io.FileDataStore;
-import org.jf.dexlib2.writer.pool.DexPool;
 
 import javax.annotation.Nonnull;
 import java.io.*;

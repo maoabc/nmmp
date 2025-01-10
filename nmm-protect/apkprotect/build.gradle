@@ -51,7 +51,9 @@ java {
 
 dependencies {
     implementation project(':arsc')
-    implementation 'org.smali:dexlib2:2.5.2'
+//    implementation 'org.smali:dexlib2:2.5.2'
+    implementation 'com.android.tools.smali:smali-dexlib2:3.0.9'
+
 
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'com.google.guava:guava:31.1-jre'

@@ -1,7 +1,8 @@
 package com.nmmedit.apkprotect.dex2c.converter.instructionrewriter;
 
-import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.Opcodes;
+
+import com.android.tools.smali.dexlib2.Opcode;
+import com.android.tools.smali.dexlib2.Opcodes;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

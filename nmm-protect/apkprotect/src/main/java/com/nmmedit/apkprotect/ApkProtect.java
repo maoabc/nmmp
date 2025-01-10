@@ -1,5 +1,12 @@
 package com.nmmedit.apkprotect;
 
+import com.android.tools.smali.dexlib2.Opcodes;
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedClassDef;
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
+import com.android.tools.smali.dexlib2.iface.ClassDef;
+import com.android.tools.smali.dexlib2.iface.DexFile;
+import com.android.tools.smali.dexlib2.writer.io.FileDataStore;
+import com.android.tools.smali.dexlib2.writer.pool.DexPool;
 import com.android.zipflinger.*;
 import com.nmmedit.apkprotect.andres.AxmlEdit;
 import com.nmmedit.apkprotect.data.Prefs;
@@ -13,13 +20,6 @@ import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
 import com.nmmedit.apkprotect.util.ApkUtils;
 import com.nmmedit.apkprotect.util.CmakeUtils;
 import com.nmmedit.apkprotect.util.FileUtils;
-import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.DexFile;
-import org.jf.dexlib2.writer.io.FileDataStore;
-import org.jf.dexlib2.writer.pool.DexPool;
 
 import javax.annotation.Nonnull;
 import java.io.*;

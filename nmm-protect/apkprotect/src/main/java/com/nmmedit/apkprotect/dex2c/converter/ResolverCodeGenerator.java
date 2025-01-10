@@ -1,10 +1,10 @@
 package com.nmmedit.apkprotect.dex2c.converter;
 
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference;
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference;
+import com.android.tools.smali.dexlib2.util.MethodUtil;
 import com.nmmedit.apkprotect.util.ModifiedUtf8;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.iface.reference.FieldReference;
-import org.jf.dexlib2.iface.reference.MethodReference;
-import org.jf.dexlib2.util.MethodUtil;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

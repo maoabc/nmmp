@@ -1,8 +1,8 @@
 package com.nmmedit.apkprotect.dex2c.converter.structs;
 
+import com.android.tools.smali.dexlib2.base.BaseMethodParameter;
+import com.android.tools.smali.dexlib2.iface.Annotation;
 import org.jetbrains.annotations.Nullable;
-import org.jf.dexlib2.base.BaseMethodParameter;
-import org.jf.dexlib2.iface.Annotation;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;

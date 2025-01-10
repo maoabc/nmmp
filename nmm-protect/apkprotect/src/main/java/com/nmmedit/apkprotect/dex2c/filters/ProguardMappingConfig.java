@@ -1,14 +1,14 @@
 package com.nmmedit.apkprotect.dex2c.filters;
 
+import com.android.tools.smali.dexlib2.iface.ClassDef;
+import com.android.tools.smali.dexlib2.iface.Method;
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference;
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.nmmedit.apkprotect.deobfus.MappingProcessor;
 import com.nmmedit.apkprotect.deobfus.MappingReader;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.iface.reference.MethodReference;
-import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -109,16 +109,12 @@ public class ProguardMappingConfig implements ClassAndMethodFilter, MappingProce
         final Set<MethodReference> oldMethodRefSet = newMethodRefMap.get(method);
 
 
-        if (oldMethodRefSet != null) {
-
-            for (MethodReference reference : oldMethodRefSet) {
-                if (oldType.equals(reference.getDefiningClass())) {
-                    if (simpleRules != null && simpleRules.matchMethod(reference.getName())) {
-                        return true;
-                    }
+        for (MethodReference reference : oldMethodRefSet) {
+            if (oldType.equals(reference.getDefiningClass())) {
+                if (simpleRules != null && simpleRules.matchMethod(reference.getName())) {
+                    return true;
                 }
             }
-
         }
 
         return simpleRules != null && simpleRules.matchMethod(method.getName());

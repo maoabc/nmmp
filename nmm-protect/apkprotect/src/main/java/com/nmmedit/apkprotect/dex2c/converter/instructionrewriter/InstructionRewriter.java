@@ -1,23 +1,23 @@
 package com.nmmedit.apkprotect.dex2c.converter.instructionrewriter;
 
+import com.android.tools.smali.dexlib2.Opcode;
+import com.android.tools.smali.dexlib2.Opcodes;
+import com.android.tools.smali.dexlib2.ReferenceType;
+import com.android.tools.smali.dexlib2.iface.ExceptionHandler;
+import com.android.tools.smali.dexlib2.iface.MethodImplementation;
+import com.android.tools.smali.dexlib2.iface.TryBlock;
+import com.android.tools.smali.dexlib2.iface.instruction.Instruction;
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction;
+import com.android.tools.smali.dexlib2.iface.instruction.SwitchElement;
+import com.android.tools.smali.dexlib2.iface.instruction.formats.*;
+import com.android.tools.smali.dexlib2.iface.reference.*;
+import com.android.tools.smali.dexlib2.writer.DexDataWriter;
+import com.android.tools.smali.util.ExceptionWithContext;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.nmmedit.apkprotect.dex2c.converter.ClassAnalyzer;
 import com.nmmedit.apkprotect.dex2c.converter.References;
-import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.ReferenceType;
-import org.jf.dexlib2.iface.ExceptionHandler;
-import org.jf.dexlib2.iface.MethodImplementation;
-import org.jf.dexlib2.iface.TryBlock;
-import org.jf.dexlib2.iface.instruction.Instruction;
-import org.jf.dexlib2.iface.instruction.ReferenceInstruction;
-import org.jf.dexlib2.iface.instruction.SwitchElement;
-import org.jf.dexlib2.iface.instruction.formats.*;
-import org.jf.dexlib2.iface.reference.*;
-import org.jf.dexlib2.writer.DexDataWriter;
-import org.jf.util.ExceptionWithContext;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;

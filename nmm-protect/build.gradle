@@ -32,5 +32,6 @@ compileTestJava.options.encoding = 'UTF-8'
 
 dependencies {
     implementation project(':apkprotect')
-    implementation 'org.smali:dexlib2:2.5.2'
+    implementation 'com.android.tools.smali:smali-dexlib2:3.0.9'
+//    implementation 'org.smali:dexlib2:2.5.2'
 }

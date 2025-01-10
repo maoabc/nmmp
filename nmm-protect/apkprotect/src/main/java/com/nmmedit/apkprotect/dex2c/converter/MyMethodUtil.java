@@ -1,8 +1,9 @@
 package com.nmmedit.apkprotect.dex2c.converter;
 
-import org.jf.dexlib2.AccessFlags;
-import org.jf.dexlib2.iface.Method;
-import org.jf.util.Hex;
+
+import com.android.tools.smali.dexlib2.AccessFlags;
+import com.android.tools.smali.dexlib2.iface.Method;
+import com.android.tools.smali.util.Hex;
 
 import javax.annotation.Nonnull;
 import java.util.List;
