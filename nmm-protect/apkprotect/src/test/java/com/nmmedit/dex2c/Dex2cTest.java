@@ -7,12 +7,12 @@ import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.InstructionRew
 import com.nmmedit.apkprotect.dex2c.converter.instructionrewriter.NoneInstructionRewriter;
 import com.nmmedit.apkprotect.dex2c.converter.testbuild.ClassMethodImplCollection;
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
-import org.jf.dexlib2.AccessFlags;
-import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.iface.ClassDef;
-import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.writer.pool.DexPool;
+import com.android.tools.smali.dexlib2.AccessFlags;
+import com.android.tools.smali.dexlib2.Opcodes;
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
+import com.android.tools.smali.dexlib2.iface.ClassDef;
+import com.android.tools.smali.dexlib2.iface.Method;
+import com.android.tools.smali.dexlib2.writer.pool.DexPool;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;

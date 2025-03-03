@@ -2,11 +2,11 @@ package com.nmmedit.dex2c;
 
 
 import com.nmmedit.apkprotect.dex2c.filters.ClassAndMethodFilter;
-import org.jf.dexlib2.AccessFlags;
-import org.jf.dexlib2.HiddenApiRestriction;
-import org.jf.dexlib2.base.reference.BaseTypeReference;
-import org.jf.dexlib2.iface.*;
-import org.jf.dexlib2.iface.reference.MethodReference;
+import com.android.tools.smali.dexlib2.AccessFlags;
+import com.android.tools.smali.dexlib2.HiddenApiRestriction;
+import com.android.tools.smali.dexlib2.base.reference.BaseTypeReference;
+import com.android.tools.smali.dexlib2.iface.*;
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
