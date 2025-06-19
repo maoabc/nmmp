@@ -1059,6 +1059,61 @@ JNIEXPORT void Java_com_nmmedit_vm_VmTest_agetOutOfBounds0
 }
 
 
+JNIEXPORT jint Java_com_nmmedit_vm_VmTest_jvalueTypeConversionError0
+        (JNIEnv *env, jclass clazz) {
+
+    const DexCode *dexCode = findDexCode("Lcom/nmmedit/vm/VmTest;", "jvalueTypeConversionError");
+    if (dexCode == NULL) {
+        return 0;
+    }
+
+    u2 registersSize = dexCode->registersSize;
+
+    regptr_t *regs = (regptr_t *) calloc(registersSize, sizeof(regptr_t));
+    u1 *reg_flags = (u1 *) calloc(registersSize, sizeof(u1));
+
+    const u2 *insns = dexCode->insns;
+    u4 insnsSize = dexCode->insnsSize;
+    const vmCode code = {
+            .insns=insns,
+            .insnsSize=insnsSize,
+            .regs=regs,
+            .reg_flags=reg_flags,
+            .triesHandlers=NULL
+    };
+    //会被优化从而忽略返回值处理
+    jint value = vmInterpret(env, &code, &dvmResolver).i;
+
+    return value;
+}
+
+JNIEXPORT jint Java_com_nmmedit_vm_VmTest_jvalueTypeConversionError1
+        (JNIEnv *env, jclass clazz) {
+
+    const DexCode *dexCode = findDexCode("Lcom/nmmedit/vm/VmTest;", "jvalueTypeConversionError");
+    if (dexCode == NULL) {
+        return 0;
+    }
+
+    u2 registersSize = dexCode->registersSize;
+
+    regptr_t *regs = (regptr_t *) calloc(registersSize, sizeof(regptr_t));
+    u1 *reg_flags = (u1 *) calloc(registersSize, sizeof(u1));
+
+    const u2 *insns = dexCode->insns;
+    u4 insnsSize = dexCode->insnsSize;
+    const vmCode code = {
+            .insns=insns,
+            .insnsSize=insnsSize,
+            .regs=regs,
+            .reg_flags=reg_flags,
+            .triesHandlers=NULL
+    };
+    volatile jvalue value = vmInterpret(env, &code, &dvmResolver);
+
+    return value.i;
+}
+
 #ifdef __cplusplus
 }
 #endif

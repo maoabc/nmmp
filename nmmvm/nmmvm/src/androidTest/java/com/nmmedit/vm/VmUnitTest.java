@@ -322,5 +322,12 @@ public class VmUnitTest {
             }
         }
     }
+
+    @Test
+    public void testJvalueError(){
+        VmTest.jvalueTypeConversionError0();
+        VmTest.jvalueTypeConversionError1();
+
+    }
 }
 

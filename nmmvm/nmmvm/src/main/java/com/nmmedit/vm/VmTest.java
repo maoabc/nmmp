@@ -295,6 +295,14 @@ public class VmTest extends ArrayList {
     }
 
     public native static void agetOutOfBounds0();
+
+    public static long jvalueTypeConversionError(){
+        return 0x1000000000000000L;
+    }
+
+    public native static int jvalueTypeConversionError0();
+
+    public native static int jvalueTypeConversionError1();
 }
 
 

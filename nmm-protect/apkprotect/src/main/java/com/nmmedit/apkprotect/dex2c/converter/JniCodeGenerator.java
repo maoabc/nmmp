@@ -202,18 +202,34 @@ public class JniCodeGenerator {
                         "            .reg_flags=reg_flags,\n" +
                         "            .triesHandlers=tries\n" +
                         "    };\n" +
-                        "\n" +
-                        "    jvalue value = vmInterpret(env,\n" +
-                        "                                &code,\n" +
-                        "                                &dvmResolver);\n"
+                        "\n"
                 , dataLength / 2));
+
+        final boolean hasReturnValue = !returnType.equals("V");
+        if (hasReturnValue) {
+            writer.write("\n" +
+                    "    volatile jvalue value = vmInterpret(env,\n" +
+                    "                                &code,\n" +
+                    "                                &dvmResolver);\n"
+            );
+
+        } else {
+
+            writer.write("\n" +
+                    "    vmInterpret(env,\n" +
+                    "              &code,\n" +
+                    "              &dvmResolver);\n"
+            );
+        }
+
+
         //不使用栈需要释放内存
         if (!useStack) {
             writer.write("    free(regs);\n");
         }
 
         //根据返回类型处理jvalue
-        if (!returnType.equals("V")) {
+        if (hasReturnValue) {
             char typeCh = returnType.charAt(0);
             writer.append(
                     String.format("    return value.%s;\n", Character.toLowerCase(typeCh == '[' ? 'L' : typeCh))
