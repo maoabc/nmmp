@@ -33,7 +33,7 @@ public class Dex2cTest {
         if (!outdir.exists()) outdir.mkdirs();
         final InstructionRewriter instructionRewriter = new NoneInstructionRewriter();
         final ClassAnalyzer classAnalyzer = new ClassAnalyzer();
-        final DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(), new BufferedInputStream(this.getClass().getResourceAsStream("/classes2.dex")));
+        final DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(null, new BufferedInputStream(this.getClass().getResourceAsStream("/classes2.dex")));
         classAnalyzer.loadDexFile(dexFile);
 
         Dex2c.handleDex(this.getClass().getResourceAsStream("/classes2.dex"),

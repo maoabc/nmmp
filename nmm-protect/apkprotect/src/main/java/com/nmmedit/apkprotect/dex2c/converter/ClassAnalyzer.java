@@ -1,6 +1,5 @@
 package com.nmmedit.apkprotect.dex2c.converter;
 
-import com.android.tools.smali.dexlib2.Opcodes;
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedClassDef;
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
 import com.android.tools.smali.dexlib2.iface.ClassDef;
@@ -40,7 +39,7 @@ public class ClassAnalyzer {
     }
 
     public void loadDexFile(@Nonnull File dexFile) throws IOException {
-        loadDexFile(DexBackedDexFile.fromInputStream(Opcodes.getDefault(), new BufferedInputStream(new FileInputStream(dexFile))));
+        loadDexFile(DexBackedDexFile.fromInputStream(null, new BufferedInputStream(new FileInputStream(dexFile))));
     }
 
     public void loadDexFile(@Nonnull DexBackedDexFile dexFile) {

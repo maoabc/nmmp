@@ -252,7 +252,7 @@ public class ApkProtect {
         mainDexClassList.add(tmpType);
         for (DexConfig config : globalConfig.getConfigs()) {
             DexBackedDexFile dexFile = DexBackedDexFile.fromInputStream(
-                    Opcodes.getDefault(),
+                    null,
                     new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
             final Set<? extends DexBackedClassDef> classes = dexFile.getClasses();
             ClassDef classDef;
@@ -301,7 +301,9 @@ public class ApkProtect {
 
         final ArrayList<File> dexFiles = new ArrayList<>();
 
-        DexPool lastDexPool = new DexPool(Opcodes.getDefault());
+        DexPool lastDexPool = null;
+
+        Opcodes opcodes = null;
 
         final List<DexConfig> configs = globalConfig.getConfigs();
         //第一个dex为main dex
@@ -309,8 +311,12 @@ public class ApkProtect {
         for (DexConfig config : configs) {
 
             DexBackedDexFile dexNativeFile = DexBackedDexFile.fromInputStream(
-                    Opcodes.getDefault(),
+                    null,
                     new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
+            if (lastDexPool == null) {
+                opcodes = dexNativeFile.getOpcodes();
+                lastDexPool = new DexPool(opcodes);
+            }
 
             for (ClassDef classDef : dexNativeFile.getClasses()) {
                 if (mainClassSet.contains(classDef.getType())) {
@@ -345,8 +351,7 @@ public class ApkProtect {
                 final File file = dexWriteToFile(retPools.get(0), size, dexOutDir);
                 dexFiles.add(file);
 
-
-                lastDexPool = new DexPool(Opcodes.getDefault());
+                lastDexPool = new DexPool(opcodes);
             }
         }
 
@@ -374,10 +379,10 @@ public class ApkProtect {
 
 
         DexFile mainDexFile = DexBackedDexFile.fromInputStream(
-                Opcodes.getDefault(),
+                null,
                 new BufferedInputStream(new FileInputStream(mainDex)));
 
-        DexPool newDex = new DexPool(Opcodes.getDefault());
+        DexPool newDex = new DexPool(mainDexFile.getOpcodes());
 
 
         copyDex(mainDexFile, newDex);

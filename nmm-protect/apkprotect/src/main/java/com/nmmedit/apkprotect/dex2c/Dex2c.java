@@ -1,6 +1,5 @@
 package com.nmmedit.apkprotect.dex2c;
 
-import com.android.tools.smali.dexlib2.Opcodes;
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
 import com.android.tools.smali.dexlib2.iface.ClassDef;
 import com.android.tools.smali.dexlib2.iface.Method;
@@ -100,7 +99,7 @@ public class Dex2c {
         DexConfig config = splitDex(dex, dexFileName, filter, classAnalyzer, outDir);
 
 
-        final DexBackedDexFile nativeImplDexFile = DexBackedDexFile.fromInputStream(Opcodes.getDefault(),
+        final DexBackedDexFile nativeImplDexFile = DexBackedDexFile.fromInputStream(null,
                 new BufferedInputStream(new FileInputStream(config.getImplDexFile())));
 
         //根据符号dex生成c代码
@@ -130,13 +129,13 @@ public class Dex2c {
                                       @Nonnull ClassAnalyzer classAnalyzer,
                                       @Nonnull File outDir) throws IOException {
         DexBackedDexFile originDexFile = DexBackedDexFile.fromInputStream(
-                Opcodes.getDefault(),
+                null,
                 dex);
 
         //把方法变为本地方法,用它替换掉原本的dex
-        DexPool shellDexPool = new DexPool(Opcodes.getDefault());
+        DexPool shellDexPool = new DexPool(originDexFile.getOpcodes());
 
-        DexPool nativeImplDexPool = new DexPool(Opcodes.getDefault());
+        DexPool nativeImplDexPool = new DexPool(originDexFile.getOpcodes());
 
         final MethodConverter methodConverter = new MethodConverter(classAnalyzer);
 
@@ -217,7 +216,7 @@ public class Dex2c {
                                                               int maxPoolSize) throws IOException {
 
         DexBackedDexFile dexNativeFile = DexBackedDexFile.fromInputStream(
-                Opcodes.getDefault(),
+                null,
                 new BufferedInputStream(new FileInputStream(config.getShellDexFile())));
 
         List<DexPool> dexPools = new ArrayList<>();
@@ -231,7 +230,7 @@ public class Dex2c {
             internClass(config, lastDexPool, classDef);
 
             if (lastDexPool.hasOverflowed(maxPoolSize)) {
-                lastDexPool = new DexPool(Opcodes.getDefault());
+                lastDexPool = new DexPool(dexNativeFile.getOpcodes());
                 dexPools.add(lastDexPool);
             }
         }
